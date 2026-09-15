@@ -1,163 +1,207 @@
-/* Gift Management System - hardcoded demo authentication.
-   Any email and any password signs in. Nothing is verified; this exists so testers can reach each app quickly.
-   One session per role is kept in localStorage so the demo switcher can jump between apps.
+/* Gift Management System - hardcoded demo authentication (single sign-in).
+   One session for the whole prototype. Sign in with a demo account button, or type any email and any password:
+   @giftwell.my -> Admin, @senjacoffee.my / @lumispa.my / @pageandink.my -> that merchant's Client console,
+   any other email -> Customer app. Nothing is verified; this exists so testers can reach each app quickly.
    Exposes a single global: Auth */
 
 (function () {
   "use strict";
 
-  var STORAGE_PREFIX = "gms.session.";
+  var STORAGE_KEY = "gms.session";
+  var LEGACY_KEYS = ["gms.session.admin", "gms.session.client", "gms.session.customer"];
   var ROLES = ["admin", "client", "customer"];
   var ROLE_PAGES = { admin: "admin.html", client: "client.html", customer: "customer.html" };
   var TENANT_KEYS = ["senja", "lumi", "page"];
-
-  var DEMO_ACCOUNTS = {
-    admin: { email: "alice@giftwell.my", name: "Alice Kwan", title: "Super admin" },
-    customer: { email: "aisyah.r@gmail.com", name: "Aisyah Rahman", title: "Customer" },
-    client: {
-      senja: { email: "farid@senjacoffee.my", name: "Farid Senja", title: "Owner" },
-      lumi: { email: "clara@lumispa.my", name: "Clara Wong", title: "Owner" },
-      page: { email: "jonas@pageandink.my", name: "Jonas Lim", title: "Owner" }
-    }
-  };
-
   var DEMO_PASSWORD = "demo1234";
 
+  var TENANT_DOMAINS = { "senjacoffee.my": "senja", "lumispa.my": "lumi", "pageandink.my": "page" };
+  var ADMIN_DOMAIN = "giftwell.my";
+
+  var ACCOUNTS = {
+    admin: { key: "admin", label: "Admin", sub: "Giftwell platform", role: "admin", email: "alice@giftwell.my", name: "Alice Kwan", title: "Super admin", mark: "G", color: "#5B2A86" },
+    client: { key: "client", label: "Client", sub: "Senja Coffee", role: "client", tenant: "senja", email: "farid@senjacoffee.my", name: "Farid Senja", title: "Owner", mark: "S", color: "#C2603E" },
+    customer1: { key: "customer1", label: "Customer 1", sub: "Aisyah Rahman", role: "customer", customer: "aisyah", email: "aisyah.r@gmail.com", name: "Aisyah Rahman", title: "Customer" },
+    customer2: { key: "customer2", label: "Customer 2", sub: "Wei Ling Tan", role: "customer", customer: "weiling", email: "weiling.tan@gmail.com", name: "Wei Ling Tan", title: "Customer" }
+  };
+
+  var ACCOUNT_ORDER = ["admin", "client", "customer1", "customer2"];
+
+  var KNOWN_PEOPLE = {
+    "alice@giftwell.my": { name: "Alice Kwan", title: "Super admin" },
+    "marcus@giftwell.my": { name: "Marcus Tan", title: "Admin" },
+    "farid@senjacoffee.my": { name: "Farid Senja", title: "Owner" },
+    "clara@lumispa.my": { name: "Clara Wong", title: "Owner" },
+    "jonas@pageandink.my": { name: "Jonas Lim", title: "Owner" },
+    "aisyah.r@gmail.com": { name: "Aisyah Rahman", title: "Customer" },
+    "weiling.tan@gmail.com": { name: "Wei Ling Tan", title: "Customer" }
+  };
+
+  var TENANT_NAMES = { senja: "Senja Coffee", lumi: "Lumi Spa", page: "Page & Ink" };
+
   function normalizeRole(role) {
-    return ROLES.indexOf(role) >= 0 ? role : "admin";
+    return ROLES.indexOf(role) >= 0 ? role : "customer";
   }
 
   function normalizeTenant(tenant) {
     return TENANT_KEYS.indexOf(tenant) >= 0 ? tenant : "senja";
   }
 
-  function demoAccount(role, tenant) {
-    var r = normalizeRole(role);
-    if (r === "client") return DEMO_ACCOUNTS.client[normalizeTenant(tenant)];
-    return DEMO_ACCOUNTS[r];
-  }
+  /* ---------- Storage (localStorage, wrapped so blocked storage never breaks the demo) ---------- */
 
-  function readSession(role) {
+  function readSession() {
     try {
-      var raw = window.localStorage.getItem(STORAGE_PREFIX + role);
+      var raw = window.localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : null;
     } catch (err) {
       return undefined;
     }
   }
 
-  function writeSession(role, session) {
+  function writeSession(session) {
     try {
-      window.localStorage.setItem(STORAGE_PREFIX + role, JSON.stringify(session));
+      LEGACY_KEYS.forEach(function (k) { window.localStorage.removeItem(k); });
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       return true;
     } catch (err) {
       return false;
     }
   }
 
-  function clearSession(role) {
+  function clearSession() {
     try {
-      window.localStorage.removeItem(STORAGE_PREFIX + role);
+      window.localStorage.removeItem(STORAGE_KEY);
+      LEGACY_KEYS.forEach(function (k) { window.localStorage.removeItem(k); });
     } catch (err) {
       /* storage blocked - nothing to clear */
     }
   }
 
+  /* ---------- Email routing ---------- */
+
   function titleCase(word) {
     return word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : "";
   }
 
-  /* Known demo email -> its sample name; any other email -> a readable name from the local part. */
-  function nameFromEmail(email, role, tenant) {
+  function nameFromEmail(email) {
     var value = String(email || "").trim().toLowerCase();
-    var known = demoAccount(role, tenant);
-    if (known && known.email === value) return known.name;
-    var local = value.split("@")[0] || "Demo user";
-    var name = local
-      .split(/[._\-+]+/)
-      .filter(Boolean)
-      .map(titleCase)
-      .join(" ");
+    if (KNOWN_PEOPLE[value]) return KNOWN_PEOPLE[value].name;
+    var local = value.split("@")[0] || "";
+    var name = local.split(/[._\-+]+/).filter(Boolean).map(titleCase).join(" ");
     return name || "Demo user";
   }
 
-  function safeNext(next, role) {
-    var pages = Object.keys(ROLE_PAGES).map(function (k) { return ROLE_PAGES[k]; });
-    return pages.indexOf(next) >= 0 ? next : ROLE_PAGES[normalizeRole(role)];
+  /* Decides where a typed email goes. */
+  function resolveEmail(email) {
+    var value = String(email || "").trim().toLowerCase();
+    var domain = value.indexOf("@") >= 0 ? value.split("@").pop() : "";
+    if (domain === ADMIN_DOMAIN) return { role: "admin", label: "Admin console" };
+    if (TENANT_DOMAINS[domain]) {
+      var tenant = TENANT_DOMAINS[domain];
+      return { role: "client", tenant: tenant, label: "Client console · " + TENANT_NAMES[tenant] };
+    }
+    var customer = value === ACCOUNTS.customer2.email ? "weiling" : "aisyah";
+    return { role: "customer", customer: customer, label: "Customer app" + (customer === "weiling" ? " · Wei Ling’s wallet" : "") };
   }
 
-  function loginUrl(role, next, tenant) {
-    var params = "role=" + encodeURIComponent(role) + "&next=" + encodeURIComponent(next || ROLE_PAGES[role]);
-    if (role === "client" && tenant) params += "&tenant=" + encodeURIComponent(tenant);
-    return "login.html?" + params;
+  function buildSession(email, route) {
+    var value = String(email || "").trim();
+    var known = KNOWN_PEOPLE[value.toLowerCase()];
+    var fallbackTitle = { admin: "Admin", client: "Staff", customer: "Customer" }[route.role];
+    return {
+      role: route.role,
+      email: value,
+      name: nameFromEmail(value),
+      title: known ? known.title : fallbackTitle,
+      tenant: route.role === "client" ? normalizeTenant(route.tenant) : null,
+      customer: route.role === "customer" ? route.customer || "aisyah" : null,
+      signedInAt: new Date().toISOString()
+    };
   }
+
+  function sessionFromAccount(account) {
+    return {
+      role: account.role,
+      email: account.email,
+      name: account.name,
+      title: account.title,
+      tenant: account.tenant || null,
+      customer: account.customer || null,
+      signedInAt: new Date().toISOString()
+    };
+  }
+
+  /* ---------- Public API ---------- */
 
   /* Accepts ANY non-empty email and password (hardcoded demo). */
   function signIn(details) {
-    var role = normalizeRole(details.role);
-    var tenant = role === "client" ? normalizeTenant(details.tenant) : null;
-    var email = String(details.email || "").trim();
-    var account = demoAccount(role, tenant);
-    var session = {
-      role: role,
-      email: email,
-      name: nameFromEmail(email, role, tenant),
-      title: account ? account.title : "",
-      tenant: tenant,
-      signedInAt: new Date().toISOString()
-    };
-    writeSession(role, session);
+    var session = buildSession(details.email, resolveEmail(details.email));
+    writeSession(session);
     return session;
   }
 
-  /* Returns the session for this role, or redirects to login and returns null.
-     If storage is blocked (private mode, file:// restrictions) the page renders with the demo account instead of looping. */
+  function signInWithAccount(key) {
+    var account = ACCOUNTS[key] || ACCOUNTS.customer1;
+    var session = sessionFromAccount(account);
+    writeSession(session);
+    return session;
+  }
+
+  function destinationFor(session) {
+    var page = ROLE_PAGES[normalizeRole(session.role)];
+    if (session.role === "client") page += "?tenant=" + encodeURIComponent(normalizeTenant(session.tenant));
+    return page;
+  }
+
+  function getSession() {
+    return readSession() || null;
+  }
+
+  /* Returns the session when it belongs to this app, otherwise sends the tester to the single sign-in page.
+     If storage is blocked the page renders with that app's demo account instead of looping. */
   function requireSession(role, page) {
     var r = normalizeRole(role);
-    var session = readSession(r);
+    var session = readSession();
     if (session === undefined) {
-      var fallback = demoAccount(r, "senja");
-      return { role: r, email: fallback.email, name: fallback.name, title: fallback.title, tenant: r === "client" ? "senja" : null, fallback: true };
+      var key = r === "customer" ? "customer1" : r;
+      var fallback = sessionFromAccount(ACCOUNTS[key]);
+      fallback.fallback = true;
+      return fallback;
     }
     if (!session || session.role !== r) {
-      var tenantParam = null;
-      if (r === "client") {
-        var params = new URLSearchParams(window.location.search);
-        tenantParam = params.get("tenant");
-      }
-      window.location.replace(loginUrl(r, page || ROLE_PAGES[r], tenantParam));
+      window.location.replace("login.html?next=" + encodeURIComponent(page || ROLE_PAGES[r]));
       return null;
     }
     return session;
   }
 
   function updateSession(role, changes) {
-    var r = normalizeRole(role);
-    var session = readSession(r);
-    if (!session) return;
+    var session = readSession();
+    if (!session || session.role !== normalizeRole(role)) return;
     Object.keys(changes).forEach(function (k) { session[k] = changes[k]; });
-    writeSession(r, session);
+    writeSession(session);
   }
 
-  function signOut(role) {
-    var r = normalizeRole(role);
-    clearSession(r);
-    window.location.href = loginUrl(r, ROLE_PAGES[r]);
+  function signOut() {
+    clearSession();
+    window.location.href = "login.html";
   }
 
   window.Auth = {
     ROLES: ROLES,
     ROLE_PAGES: ROLE_PAGES,
+    ACCOUNTS: ACCOUNTS,
+    ACCOUNT_ORDER: ACCOUNT_ORDER,
     DEMO_PASSWORD: DEMO_PASSWORD,
-    demoAccount: demoAccount,
     normalizeRole: normalizeRole,
     normalizeTenant: normalizeTenant,
-    safeNext: safeNext,
-    loginUrl: loginUrl,
+    nameFromEmail: nameFromEmail,
+    resolveEmail: resolveEmail,
     signIn: signIn,
+    signInWithAccount: signInWithAccount,
+    destinationFor: destinationFor,
+    getSession: getSession,
     requireSession: requireSession,
     updateSession: updateSession,
-    signOut: signOut,
-    nameFromEmail: nameFromEmail
+    signOut: signOut
   };
 })();

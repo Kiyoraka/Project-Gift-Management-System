@@ -148,6 +148,91 @@
   align-self: flex-start;
 }
 
+.route-hint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+/* ---------- Demo account buttons ---------- */
+
+.demo-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.demo-divider::before,
+.demo-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.demo-accounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.demo-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.demo-account:hover:not(:disabled) {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-panel);
+}
+
+.demo-account:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.demo-account.is-loading {
+  opacity: 1;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.demo-account-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.demo-account-label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.demo-account-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .btn .spinner {
   --size: 16px;
   border-width: 2px;
@@ -200,5 +285,15 @@
   .login-main {
     align-items: flex-start;
     padding: 24px 16px calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .demo-account {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .demo-account .brand-mark,
+  .demo-account .avatar {
+    --size: 32px !important;
   }
 }

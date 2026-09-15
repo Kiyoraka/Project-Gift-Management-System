@@ -1,13 +1,10 @@
-/* Login page - hardcoded demo sign in (any email + any password). Requires ui.js and auth.js. */
+/* Login page - single sign-in with demo account buttons. Requires ui.js and auth.js.
+   Demo buttons sign in instantly; the form accepts any email + any password and routes by email domain. */
 
 (function () {
   "use strict";
 
-  var ROLE_INTRO = {
-    admin: "Platform admin for all three clients.",
-    client: "Merchant console for one tenant.",
-    customer: "The gift wallet on your phone."
-  };
+  var SIGN_IN_DELAY = 600;
 
   var FAN_CARDS = [
     { tenant: "Lumi Spa", name: "Calm Hour", type: "voucher", balanceLabel: "60-min massage", number: "7710 2205 8831 0046", expiry: "Dec 2026" },
@@ -15,27 +12,17 @@
     { tenant: "Page & Ink", name: "First Edition", type: "open", balanceLabel: "RM 35.00", number: "5583 0917 4420 6619", expiry: "Jun 2027" }
   ];
 
-  var params = new URLSearchParams(window.location.search);
-
-  var state = {
-    role: Auth.normalizeRole(params.get("role")),
-    tenant: Auth.normalizeTenant(params.get("tenant")),
-    next: params.get("next"),
-    emailEdited: false,
-    submitting: false
-  };
+  var submitting = false;
 
   var els = {
     form: document.getElementById("loginForm"),
-    roleTabs: document.getElementById("roleTabs"),
-    tenantField: document.getElementById("tenantField"),
-    tenantSelect: document.getElementById("tenantSelect"),
     email: document.getElementById("emailInput"),
     password: document.getElementById("passwordInput"),
     error: document.getElementById("loginError"),
     submit: document.getElementById("submitBtn"),
-    intro: document.getElementById("loginIntro"),
+    hint: document.getElementById("routeHint"),
     fan: document.getElementById("cardFan"),
+    accounts: document.getElementById("demoAccounts"),
     eye: document.querySelector("[data-action='togglePassword']")
   };
 
@@ -45,61 +32,69 @@
     }).join("");
   }
 
-  function fillDemoEmail() {
-    if (state.emailEdited) return;
-    var account = Auth.demoAccount(state.role, state.tenant);
-    els.email.value = account ? account.email : "";
+  function accountMark(account) {
+    if (account.mark) {
+      return '<span class="brand-mark" style="--size:38px;--mark:' + account.color + '">' + UI.escapeHtml(account.mark) + "</span>";
+    }
+    return '<span class="avatar" style="--size:38px;font-size:13px">' + UI.escapeHtml(UI.initials(account.name)) + "</span>";
   }
 
-  function renderRole() {
-    Array.prototype.forEach.call(els.roleTabs.querySelectorAll("button"), function (btn) {
-      var active = btn.getAttribute("data-role") === state.role;
-      btn.classList.toggle("is-active", active);
-      btn.setAttribute("aria-selected", active ? "true" : "false");
-    });
-    els.tenantField.hidden = state.role !== "client";
-    els.tenantSelect.value = state.tenant;
-    els.intro.textContent = ROLE_INTRO[state.role];
-    fillDemoEmail();
+  function renderAccounts() {
+    els.accounts.innerHTML = Auth.ACCOUNT_ORDER.map(function (key) {
+      var a = Auth.ACCOUNTS[key];
+      return (
+        '<button type="button" class="demo-account" data-action="demoSignIn" data-account="' + key + '" aria-label="Sign in as ' +
+        UI.escapeHtml(a.label + ", " + a.sub) + '">' + accountMark(a) +
+        '<span class="demo-account-text"><span class="demo-account-label">' + UI.escapeHtml(a.label) + "</span>" +
+        '<span class="demo-account-sub">' + UI.escapeHtml(a.sub) + "</span></span></button>"
+      );
+    }).join("");
   }
 
   function renderEye() {
-    els.eye.innerHTML = UI.icon("eye", 18);
     var shown = els.password.type === "text";
+    els.eye.innerHTML = UI.icon("eye", 18);
     els.eye.classList.toggle("is-on", shown);
     els.eye.setAttribute("aria-pressed", shown ? "true" : "false");
     els.eye.setAttribute("aria-label", shown ? "Hide password" : "Show password");
   }
 
-  function destination() {
-    var page = Auth.ROLE_PAGES[state.role];
-    var next = Auth.safeNext(state.next, state.role);
-    if (next !== page) next = page;
-    if (state.role === "client") next += "?tenant=" + encodeURIComponent(state.tenant);
-    return next;
+  function renderHint() {
+    var value = els.email.value.trim();
+    els.hint.textContent = value.indexOf("@") > 0
+      ? "Opens: " + Auth.resolveEmail(value).label
+      : "Opens the app that matches your email";
   }
 
-  function setSubmitting(on) {
-    state.submitting = on;
-    els.submit.disabled = on;
-    els.submit.innerHTML = on ? '<span class="spinner" aria-hidden="true"></span> Signing in&hellip;' : "Sign in";
+  function setBusy(trigger) {
+    submitting = true;
+    els.submit.disabled = true;
+    Array.prototype.forEach.call(els.accounts.querySelectorAll("button"), function (b) { b.disabled = true; });
+    if (trigger === els.submit) {
+      els.submit.innerHTML = '<span class="spinner" aria-hidden="true"></span> Signing in&hellip;';
+    } else {
+      trigger.classList.add("is-loading");
+      trigger.querySelector(".demo-account-sub").innerHTML = '<span class="spinner spinner-sm" aria-hidden="true"></span> Signing in&hellip;';
+    }
+  }
+
+  function finish(session) {
+    window.location.href = Auth.destinationFor(session);
   }
 
   UI.delegate(document, {
-    setRole: function (el) {
-      state.role = Auth.normalizeRole(el.getAttribute("data-role"));
-      state.emailEdited = false;
+    demoSignIn: function (el) {
+      if (submitting) return;
       els.error.hidden = true;
-      renderRole();
-    },
-    setTenant: function (el) {
-      state.tenant = Auth.normalizeTenant(el.value);
-      state.emailEdited = false;
-      renderRole();
+      setBusy(el);
+      var key = el.getAttribute("data-account");
+      window.setTimeout(function () {
+        finish(Auth.signInWithAccount(key));
+      }, SIGN_IN_DELAY);
     },
     editEmail: function () {
-      state.emailEdited = true;
       els.error.hidden = true;
+      renderHint();
     },
     togglePassword: function () {
       els.password.type = els.password.type === "password" ? "text" : "password";
@@ -113,24 +108,21 @@
 
   els.form.addEventListener("submit", function (event) {
     event.preventDefault();
-    if (state.submitting) return;
+    if (submitting) return;
     var email = els.email.value.trim();
-    var password = els.password.value;
-    if (!email || !password) {
+    if (!email || !els.password.value) {
       els.error.hidden = false;
       (email ? els.password : els.email).focus();
       return;
     }
     els.error.hidden = true;
-    setSubmitting(true);
+    setBusy(els.submit);
     window.setTimeout(function () {
-      Auth.signIn({ role: state.role, tenant: state.tenant, email: email });
-      window.location.href = destination();
-    }, 600);
+      finish(Auth.signIn({ email: email }));
+    }, SIGN_IN_DELAY);
   });
 
-  els.password.value = Auth.DEMO_PASSWORD;
   renderFan();
-  renderRole();
+  renderAccounts();
   renderEye();
 })();

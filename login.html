@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sign in - Giftwell</title>
-<meta name="description" content="Demo sign in for the Gift Management System prototype. Any email and password works.">
+<meta name="description" content="Demo sign in for the Gift Management System prototype. Use a demo account or any email and password.">
 <link rel="stylesheet" href="assets/css/tokens.css">
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/gift-card.css">
@@ -34,31 +34,14 @@
     <div class="login-card">
       <div>
         <h1 class="page-title">Sign in</h1>
-        <p class="muted login-intro" id="loginIntro">Choose a workspace to open the prototype.</p>
+        <p class="muted login-intro">One sign in for the whole prototype.</p>
       </div>
 
       <form class="stack" style="--gap:16px" id="loginForm" novalidate>
-        <div class="field">
-          <span>Sign in as</span>
-          <div class="segmented" role="tablist" aria-label="Role" id="roleTabs">
-            <button type="button" role="tab" data-action="setRole" data-role="admin">Admin</button>
-            <button type="button" role="tab" data-action="setRole" data-role="client">Client</button>
-            <button type="button" role="tab" data-action="setRole" data-role="customer">Customer</button>
-          </div>
-        </div>
-
-        <label class="field" id="tenantField" hidden>
-          Tenant
-          <select class="select" id="tenantSelect" data-change="setTenant">
-            <option value="senja">Senja Coffee</option>
-            <option value="lumi">Lumi Spa</option>
-            <option value="page">Page &amp; Ink</option>
-          </select>
-        </label>
-
         <label class="field">
           Email
           <input class="input" id="emailInput" type="email" autocomplete="username" inputmode="email" data-input="editEmail" placeholder="name@company.com">
+          <span class="route-hint" id="routeHint" aria-live="polite">Opens the app that matches your email</span>
         </label>
 
         <label class="field">
@@ -69,15 +52,19 @@
           </span>
         </label>
 
-        <div class="form-error" id="loginError" role="alert" hidden>Enter any email and password to continue.</div>
+        <div class="form-error" id="loginError" role="alert" hidden>Enter any email and password, or pick a demo account below.</div>
 
         <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">Sign in</button>
+      </form>
 
+      <div class="stack" style="--gap:12px">
+        <div class="demo-divider"><span>or use a demo account</span></div>
+        <div class="demo-accounts" id="demoAccounts" role="group" aria-label="Demo accounts"></div>
         <div class="login-demo" role="note">
           <strong>Demo mode</strong>
-          <span>Any email and any password works. Fields are pre-filled so one tap signs you in.</span>
+          <span>Any email and password works: @giftwell.my opens Admin, a merchant email (@senjacoffee.my, @lumispa.my, @pageandink.my) opens that Client console, anything else opens the Customer app.</span>
         </div>
-      </form>
+      </div>
 
       <a class="btn-link login-back" href="index.html">&larr; Back to foundation</a>
     </div>
