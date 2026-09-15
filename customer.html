@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAF8FC">
+<title>Giftwell - Gift Wallet</title>
+<meta name="description" content="Giftwell customer gift wallet prototype: buy, send, receive and pay with gift cards.">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/gift-card.css">
+<link rel="stylesheet" href="assets/css/customer.css">
+<link rel="stylesheet" href="assets/css/demo-switch.css">
+</head>
+<body class="app-body">
+<div class="app" id="app">
+
+  <header class="app-header">
+    <div class="greeting">
+      <span class="avatar" style="--size:36px;font-size:13px" id="customerAvatar">AR</span>
+      <div style="min-width:0">
+        <div class="caption">Good afternoon</div>
+        <div class="greeting-name" id="customerName">Aisyah Rahman</div>
+      </div>
+    </div>
+    <button type="button" class="inbox-btn" data-action="openInbox" aria-label="Gift inbox" id="inboxBtn"></button>
+  </header>
+
+  <main class="app-main" id="appMain" tabindex="-1"></main>
+  <div id="appScan"></div>
+  <div id="appOverlay"></div>
+
+  <nav class="tabbar" id="tabbar" aria-label="Gift wallet"></nav>
+</div>
+
+<div id="demoSwitch"></div>
+
+<noscript><p style="padding:24px">This prototype needs JavaScript enabled.</p></noscript>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/customer-data.js"></script>
+<script src="assets/js/customer-screens.js"></script>
+<script src="assets/js/customer-flows.js"></script>
+<script src="assets/js/customer.js"></script>
+</body>
+</html>

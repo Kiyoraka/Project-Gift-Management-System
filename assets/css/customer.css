@@ -1,0 +1,535 @@
+/* Customer app - mobile-first gift wallet.
+   <=767px: full viewport app. >=768px: the same app centred in a 390 x 844 frame (never stretched wide). */
+
+.app-body {
+  background: var(--backdrop);
+}
+
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ---------- Header ---------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) 20px 10px;
+}
+
+.greeting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.greeting-name {
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inbox-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.inbox-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Main scroll area ---------- */
+
+.app-main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 20px calc(104px + env(safe-area-inset-bottom, 0px));
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.wallet-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  animation: popIn 180ms ease-out;
+}
+
+.wallet-card-actions .btn {
+  flex: 1;
+  border-radius: 12px;
+  padding: 11px;
+  font-size: 13px;
+}
+
+.btn-app {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.note-box {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.warn-box {
+  background: var(--pill-warning-bg);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--pill-warning-fg);
+}
+
+.empty-wallet {
+  border: 2px dashed var(--line);
+  border-radius: 20px;
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.soft-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.soft-panel-pad {
+  padding: 4px 16px;
+}
+
+.message-bubble {
+  position: relative;
+  margin: -14px 16px 0;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 16px 4px;
+  box-shadow: 0 8px 24px rgba(31, 27, 42, 0.1);
+}
+
+.message-text {
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pill-success-bg);
+  color: var(--success);
+}
+
+.success-icon.is-gold {
+  background: var(--pill-gold-bg);
+  color: var(--pill-gold-fg);
+}
+
+.center-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.choice-btn:hover {
+  border-color: var(--primary);
+}
+
+.choice-thumb {
+  position: relative;
+  width: 96px;
+  flex-shrink: 0;
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+}
+
+.dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.dots span.is-on {
+  background: var(--primary);
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.qty button {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.qty output {
+  min-width: 20px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.denom-row {
+  display: flex;
+  gap: 8px;
+}
+
+.denom-row .chip {
+  flex: 1;
+  padding: 14px 6px;
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+
+/* ---------- Bottom tab bar ---------- */
+
+.tabbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  padding: 8px 8px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 6px 0 0;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tab-btn.is-active {
+  color: var(--primary);
+}
+
+.tab-raised {
+  width: 56px;
+  height: 56px;
+  margin-top: -30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--accent), 0 10px 24px rgba(91, 42, 134, 0.35);
+}
+
+/* ---------- Overlays inside the app ---------- */
+
+.sheet-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(14, 12, 20, 0.6);
+  animation: fadeIn 150ms ease-out;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-radius: 28px 28px 0 0;
+  animation: sheetIn 260ms var(--ease-out);
+}
+
+.fullscreen {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  animation: sheetIn 240ms var(--ease-out);
+}
+
+.fullscreen-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) 20px 8px;
+}
+
+.fullscreen-head h1 {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fullscreen-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 20px calc(28px + env(safe-area-inset-bottom, 0px));
+}
+
+.scan-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--scan-bg);
+  color: #F2EEF7;
+}
+
+.scan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(22px + env(safe-area-inset-top, 0px)) 20px 0;
+  font-weight: 600;
+}
+
+.scan-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 20px calc(110px + env(safe-area-inset-bottom, 0px));
+}
+
+.scan-frame {
+  position: relative;
+  width: min(250px, 70vw);
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.scan-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 40%, #2A2438, #16131F 70%);
+}
+
+.scan-corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border: 0 solid var(--accent);
+}
+
+.scan-corner.tl { left: 0; top: 0; border-left-width: 3px; border-top-width: 3px; border-radius: 12px 0 0 0; }
+.scan-corner.tr { right: 0; top: 0; border-right-width: 3px; border-top-width: 3px; border-radius: 0 12px 0 0; }
+.scan-corner.bl { left: 0; bottom: 0; border-left-width: 3px; border-bottom-width: 3px; border-radius: 0 0 0 12px; }
+.scan-corner.br { right: 0; bottom: 0; border-right-width: 3px; border-bottom-width: 3px; border-radius: 0 0 12px 0; }
+
+.scan-line {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: scanLine 2.4s ease-in-out infinite;
+}
+
+.scan-target {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #322D40;
+  background: #1B1824;
+  color: #F2EEF7;
+  text-align: left;
+}
+
+.scan-target:hover {
+  border-color: #A77BD6;
+}
+
+.dark-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #322D40;
+  background: transparent;
+  color: #F2EEF7;
+}
+
+/* Toast and demo switcher sit inside / above the app chrome */
+.app > .toast {
+  position: absolute;
+  bottom: calc(104px + env(safe-area-inset-bottom, 0px));
+  z-index: 80;
+}
+
+/* ---------- Desktop / tablet: centred app frame ---------- */
+
+@media (min-width: 768px) {
+  .app-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .app {
+    width: 390px;
+    height: min(844px, calc(100vh - 48px));
+    height: min(844px, calc(100dvh - 48px));
+    border-radius: 44px;
+    border: 10px solid #1F1B2A;
+    box-shadow: 0 30px 80px rgba(31, 27, 42, 0.25);
+  }
+
+  .app-header {
+    padding-top: 18px;
+  }
+
+  .tabbar {
+    padding-bottom: 18px;
+  }
+}
+
+@media (max-width: 767px) {
+  .app-body .demo-switch {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+  }
+
+  .app-body .demo-switch-toggle {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
