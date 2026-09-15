@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Giftwell - Gift Management System</title>
+<meta name="description" content="Gift Management System proposal demo - foundation, design tokens and links to the Admin, Client and Customer prototypes.">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/gift-card.css">
+<style>
+  .hub {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 40px 48px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  .hub-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .hub-title {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 600;
+    margin: 6px 0 8px;
+    line-height: 1.1;
+  }
+
+  .hub-lead {
+    margin: 0;
+    color: var(--ink-muted);
+    max-width: 560px;
+  }
+
+  .hub-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .hub-link {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 170px;
+    padding: 12px 18px;
+    border-radius: var(--radius-panel);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .hub-link:hover {
+    border-color: var(--primary);
+    color: var(--ink);
+  }
+
+  .hub-link small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-muted);
+  }
+
+  .hub-link.is-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  .hub-link.is-primary small {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .hub-link.is-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .demo-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--radius-panel);
+    background: var(--pill-gold-bg);
+    border: 1px solid var(--accent);
+    color: #6E4F12;
+    font-size: 13px;
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+  }
+
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .template-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-tile);
+    box-shadow: var(--shadow-panel);
+  }
+
+  .color-chip {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid rgba(31, 27, 42, 0.1);
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .palette-item {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+    overflow: hidden;
+  }
+
+  .palette-swatches {
+    display: flex;
+    height: 64px;
+  }
+
+  .palette-swatches span {
+    flex: 1;
+  }
+
+  .palette-body {
+    padding: 10px 12px;
+  }
+
+  .foundation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .foundation-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-tile);
+    box-shadow: var(--shadow-panel);
+    min-width: 0;
+  }
+
+  .type-sample-note {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+
+  .toast-sample {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: var(--radius-panel);
+    background: var(--ink);
+    color: #F2EEF7;
+    font-size: 13px;
+    border-left: 3px solid var(--tone);
+  }
+
+  .radius-box {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    padding-bottom: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  .space-box {
+    background: var(--primary);
+  }
+
+  .nav-sample {
+    width: 240px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-panel);
+  }
+
+  .nav-sample div {
+    padding: 10px 12px 10px 13px;
+    border-radius: 8px;
+    color: var(--ink-muted);
+    font-weight: 500;
+  }
+
+  .nav-sample .is-active {
+    padding-left: 10px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+    border-left: 3px solid var(--primary);
+  }
+
+  .hub-footer {
+    color: var(--ink-muted);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  @media (max-width: 767px) {
+    .hub {
+      padding: 24px 16px 56px;
+      gap: 36px;
+    }
+
+    .hub-title {
+      font-size: 30px;
+    }
+
+    .section-head h2 {
+      font-size: 22px;
+    }
+
+    .hub-link {
+      flex: 1 1 100%;
+    }
+
+    .template-grid,
+    .foundation-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .foundation-panel {
+      padding: 18px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="hub">
+
+  <header class="hub-header">
+    <div>
+      <div class="eyebrow"><a href="index.html" style="color:inherit;text-decoration:none">&larr; Home</a> &middot; Gift Management System &middot; Proposal demo</div>
+      <h1 class="hub-title">Foundation &amp; prototypes</h1>
+      <p class="hub-lead">Velvet plum for the platform, gold ribbon for the gift moment. The tenant's card artwork is always the colour.</p>
+    </div>
+    <nav class="hub-nav" aria-label="Prototypes">
+      <a class="hub-link is-primary" href="login.html">Sign in<small>Demo accounts ready</small></a>
+      <a class="hub-link" href="admin.html">Admin Console<small>Desktop + mobile</small></a>
+      <a class="hub-link" href="client.html">Client Console<small>Senja &middot; Lumi &middot; Page &amp; Ink</small></a>
+      <a class="hub-link" href="customer.html">Customer App<small>Mobile-first gift wallet</small></a>
+    </nav>
+  </header>
+
+  <div class="demo-note" role="note">
+    <strong>Demo login:</strong> one sign in for everything. Tap a demo account (Admin, Client, Customer 1, Customer 2) or use any email and password. Every figure on these screens is sample data.
+  </div>
+
+  <section class="section" aria-labelledby="templates-title">
+    <div class="section-head">
+      <h2 id="templates-title">Three client card templates</h2>
+      <span class="caption">1.586 : 1 &middot; overlay safe zone bottom 34% &middot; type badge top right &middot; tap a card to flip</span>
+    </div>
+    <div class="template-grid" id="templateGrid"></div>
+  </section>
+
+  <section class="section" aria-labelledby="palette-title">
+    <div class="section-head">
+      <h2 id="palette-title">Palette</h2>
+      <span class="caption">Left half light theme &middot; right half dark theme value</span>
+    </div>
+    <div class="palette-grid" id="paletteGrid"></div>
+  </section>
+
+  <section class="foundation-grid" aria-label="Foundation">
+    <div class="foundation-panel">
+      <h2 class="section-title">Type scale</h2>
+      <div class="stack" style="--gap:14px">
+        <div><div class="display" style="font-size:32px;line-height:1.1">RM 132,250</div><div class="type-sample-note">Display &middot; Fraunces 32 / 600 &middot; page titles, stat numbers</div></div>
+        <div><div class="display" style="font-size:26px;line-height:1.1">Wallet</div><div class="type-sample-note">Display mobile &middot; Fraunces 26 / 600</div></div>
+        <div><div>Scan with the gift app to pay at the counter.</div><div class="type-sample-note">Body &middot; Inter 14 / 400</div></div>
+        <div><div style="font-weight:600">Outstanding gift balance</div><div class="type-sample-note">Label &middot; Inter 14 / 600</div></div>
+        <div><div class="caption" style="font-weight:500">Last visit 3 days ago</div><div class="type-sample-note">Caption &middot; Inter 12 / 500</div></div>
+        <div><div class="mono" style="font-size:16px;letter-spacing:.12em;overflow-wrap:anywhere">4021 8830 1194 7702</div><div class="type-sample-note">Card number &middot; JetBrains Mono 16 / 500 &middot; 0.12em</div></div>
+      </div>
+    </div>
+
+    <div class="foundation-panel">
+      <h2 class="section-title">Components</h2>
+      <div class="stack" style="--gap:8px">
+        <div class="stat-label">Buttons</div>
+        <div class="row-wrap" style="--gap:10px">
+          <button type="button" class="btn btn-primary">Show Payment QR</button>
+          <button type="button" class="btn btn-outline">Add Gateway</button>
+          <button type="button" class="btn btn-soft">Export CSV</button>
+          <button type="button" class="btn btn-danger-outline">Suspend client</button>
+        </div>
+      </div>
+      <div class="stack" style="--gap:8px">
+        <div class="stat-label">Status pills</div>
+        <div class="row-wrap" style="--gap:8px" id="pillRow"></div>
+      </div>
+      <div class="stack" style="--gap:8px">
+        <div class="stat-label">Chips</div>
+        <div class="row-wrap" style="--gap:8px">
+          <span class="chip is-active">Month</span><span class="chip">Day</span><span class="chip">Year</span><span class="chip">Custom</span>
+        </div>
+      </div>
+      <div class="stack" style="--gap:8px">
+        <div class="stat-label">Stat tile</div>
+        <div class="stat-tile" style="max-width:320px" id="statSample"></div>
+      </div>
+      <div class="stack" style="--gap:8px">
+        <div class="stat-label">Toasts</div>
+        <div class="stack" style="--gap:8px;max-width:360px">
+          <div class="toast-sample" style="--tone:var(--success)">Payment received &middot; RM 18.00 from Aisyah R.</div>
+          <div class="toast-sample" style="--tone:var(--warning)">Stripe connection pending verification</div>
+          <div class="toast-sample" style="--tone:var(--danger)">Gift declined by recipient</div>
+          <div class="toast-sample" style="--tone:var(--info)">Amount QR expires in 4:52</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foundation-panel">
+      <h2 class="section-title">Shape, spacing, motion</h2>
+      <div class="row-wrap" style="--gap:12px;align-items:flex-end">
+        <div class="radius-box" style="border-radius:12px">12 panel</div>
+        <div class="radius-box" style="border-radius:16px">16 tile</div>
+        <div class="radius-box" style="border-radius:20px">20 card</div>
+        <div class="radius-box" style="width:auto;height:32px;padding:0 14px;align-items:center;border-radius:999px">999 pill</div>
+      </div>
+      <div class="row" style="--gap:6px;align-items:flex-end">
+        <div class="space-box" style="width:4px;height:4px"></div>
+        <div class="space-box" style="width:8px;height:8px"></div>
+        <div class="space-box" style="width:12px;height:12px"></div>
+        <div class="space-box" style="width:16px;height:16px"></div>
+        <div class="space-box" style="width:24px;height:24px"></div>
+        <div class="space-box" style="width:32px;height:32px"></div>
+        <span class="caption" style="margin-left:8px">4 &middot; 8 &middot; 12 &middot; 16 &middot; 24 &middot; 32</span>
+      </div>
+      <ul style="margin:0;padding-left:18px;line-height:1.7;font-size:13px">
+        <li>Card slides into the wallet on purchase or accept &middot; 300 ms ease-out</li>
+        <li>QR popup fades and scales 96 &rarr; 100% &middot; 180 ms</li>
+        <li>Balance counts down on spend &middot; 400 ms</li>
+        <li>Nothing else moves. Merchant tools stay still.</li>
+      </ul>
+      <div class="caption">Shadows &middot; panel <span class="mono">0 4px 20px rgba(31,27,42,.06)</span> &middot; raised for QR popup and wallet cards</div>
+      <div class="stat-label">Sidebar active item</div>
+      <div class="nav-sample" aria-hidden="true">
+        <div>Main</div>
+        <div class="is-active">Analysis</div>
+        <div>Customer List</div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="hub-footer">Prepared for TNEX Malaysia Sdn Bhd &middot; Hardcoded proposal prototype &middot; Sample data only</footer>
+</div>
+
+<script src="assets/js/ui.js"></script>
+<script>
+  (function () {
+    "use strict";
+
+    var templates = [
+      { business: "Specialty coffee bar", language: "Warm, hand-drawn sun, grainy paper texture. Terracotta on cream.",
+        card: { tenant: "Senja Coffee", name: "Sunrise", type: "fixed", balanceLabel: "RM 100", number: "4021 8830 1194 7702", expiry: "Mar 2027" } },
+      { business: "Wellness and massage", language: "Soft gradients, botanical line art, lots of air. Sage on mist.",
+        card: { tenant: "Lumi Spa", name: "Calm Hour", type: "voucher", balanceLabel: "60-min massage", number: "7710 2205 8831 0046", expiry: "Dec 2026" } },
+      { business: "Independent bookshop", language: "Editorial serif, bookplate frames, ink stamps. Navy on parchment.",
+        card: { tenant: "Page & Ink", name: "First Edition", type: "open", balanceLabel: "RM 35.00", number: "5583 0917 4420 6619", expiry: "Jun 2027" } }
+    ];
+
+    var tokens = [
+      ["--bg", "#FAF8FC", "#121018", "Page background"],
+      ["--surface", "#FFFFFF", "#1B1824", "Cards, panels, sidebar"],
+      ["--surface-2", "#F1EDF6", "#252131", "Table stripes, inputs"],
+      ["--ink", "#1F1B2A", "#F2EEF7", "Primary text"],
+      ["--ink-muted", "#6B647A", "#A59DB5", "Secondary text, labels"],
+      ["--line", "#E4DEEC", "#322D40", "Borders, dividers"],
+      ["--primary", "#5B2A86", "#A77BD6", "Buttons, active nav, links"],
+      ["--primary-soft", "#EEE4F7", "#2E2140", "Active nav bg, chips"],
+      ["--accent", "#D9A441", "#E4B85C", "Gift ribbon, Default tag"],
+      ["--success", "#2E9E6B", "#4CC38A", "Active, paid, accepted"],
+      ["--warning", "#D98A2B", "#E9A44C", "Pending, low balance"],
+      ["--danger", "#D64545", "#EF6B6B", "Declined, suspended"],
+      ["--info", "#3E7CB1", "#6BA5D9", "Informational toasts"]
+    ];
+
+    var flipped = {};
+
+    function renderTemplates() {
+      var grid = document.getElementById("templateGrid");
+      grid.innerHTML = templates.map(function (t, i) {
+        var style = UI.tenantStyle(t.card.tenant);
+        return (
+          '<article class="template-card">' +
+          UI.renderGiftCard(t.card, { flipped: !!flipped[i], action: "flipTemplate", id: i }) +
+          '<div class="spread" style="align-items:flex-start">' +
+          '<div><div style="font-weight:600">' + UI.escapeHtml(t.card.tenant) + '</div><div class="caption" style="margin-top:2px">' + UI.escapeHtml(t.business) + "</div></div>" +
+          '<div class="row" style="--gap:6px">' +
+          '<span class="color-chip" style="background:' + style.brand + '"></span>' +
+          '<span class="color-chip" style="background:' + style.art + '"></span>' +
+          '<span class="mono caption" style="font-size:11px">' + style.brand + "</span></div></div>" +
+          '<div class="caption" style="font-size:13px">' + UI.escapeHtml(t.language) + "</div>" +
+          "</article>"
+        );
+      }).join("");
+    }
+
+    function renderPalette() {
+      document.getElementById("paletteGrid").innerHTML = tokens.map(function (tk) {
+        return (
+          '<div class="palette-item"><div class="palette-swatches"><span style="background:' + tk[1] + '"></span><span style="background:' + tk[2] + '"></span></div>' +
+          '<div class="palette-body"><div class="mono" style="font-size:12px">' + tk[0] + '</div>' +
+          '<div class="caption" style="font-size:11px;margin-top:2px">' + tk[1] + " &middot; " + tk[2] + "</div>" +
+          '<div style="font-size:12px;margin-top:6px">' + tk[3] + "</div></div></div>"
+        );
+      }).join("");
+    }
+
+    function renderComponents() {
+      document.getElementById("pillRow").innerHTML = ["Active", "Paid", "Pending", "Disabled", "Suspended", "Redeemed", "Expired", "Default"]
+        .map(function (s) { return UI.pill(s); }).join("");
+      document.getElementById("statSample").innerHTML =
+        '<div><div class="stat-label">Gift value in circulation</div><div class="stat-value" style="font-size:32px">RM 132,250</div>' +
+        '<span class="delta pill-success">+8.2%</span></div>' + UI.sparkline("0,32 12,28 24,30 36,20 48,22 60,12 72,14 80,6");
+    }
+
+    UI.delegate(document, {
+      flipTemplate: function (el) {
+        var i = el.getAttribute("data-id");
+        flipped[i] = !flipped[i];
+        renderTemplates();
+      }
+    });
+
+    renderTemplates();
+    renderPalette();
+    renderComponents();
+  })();
+</script>
+</body>
+</html>

@@ -347,7 +347,8 @@
 
   function renderDemoSwitcher(current, extraHtml) {
     var links = [
-      ["index.html", "Foundation", "foundation"],
+      ["index.html", "Home", "home"],
+      ["foundation.html", "Foundation", "foundation"],
       ["admin.html", "Admin", "admin"],
       ["client.html", "Client", "client"],
       ["customer.html", "Customer", "customer"]
