@@ -103,10 +103,67 @@
     );
   }
 
-  /* ---------- Add Gateway drawer (filled in by the gateway task) ---------- */
+  /* ---------- Add Gateway drawer ---------- */
 
-  function gatewayHtml() {
-    return "";
+  var gw = { provider: "DuitNow QR", isDefault: false, test: "idle" };
+  var testTimer = null;
+
+  function resetGateway() {
+    clearTimeout(testTimer);
+    testTimer = null;
+    gw = { provider: "DuitNow QR", isDefault: false, test: "idle" };
+  }
+
+  function gatewayHtml(ctx) {
+    var t = ctx.tenant;
+    var providers = Object.keys(ClientData.PROVIDERS).map(function (name) {
+      var p = ClientData.PROVIDERS[name];
+      var selected = gw.provider === name;
+      return (
+        '<button type="button" data-action="gwProvider" data-provider="' + esc(name) + '" aria-pressed="' + selected + '" ' +
+        'style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;text-align:left;background:var(--surface);border:1px solid ' +
+        (selected ? "var(--primary);box-shadow:0 0 0 1px var(--primary)" : "var(--line)") + '">' +
+        '<span class="brand-mark" style="--size:28px;--mark:' + p.bg + ';border-radius:8px;font-family:var(--font-body);font-size:11px">' + esc(p.logo) + "</span>" +
+        '<span style="font-size:13px;font-weight:600">' + esc(name) + "</span></button>"
+      );
+    }).join("");
+
+    var fields = ClientData.PROVIDERS[gw.provider].fields.map(function (f) {
+      var placeholder = f[1].replace("{tenant}", t.name);
+      return (
+        '<label class="field">' + esc(f[0]) + '<input class="input mono" type="' + f[2] + '" autocomplete="off" placeholder="' + esc(placeholder) + '"></label>'
+      );
+    }).join("");
+
+    var testBox;
+    if (gw.test === "testing") {
+      testBox = '<span class="spinner spinner-sm"></span><span class="muted" style="font-size:13px">Contacting ' + esc(gw.provider) + "…</span>";
+    } else if (gw.test === "ok") {
+      testBox = '<span class="avatar" style="--size:20px;background:var(--success);color:#fff">' + UI.icon("check", 12, 2.4) +
+        '</span><span style="font-size:13px;font-weight:600;color:var(--success)">Connected · webhook verified · 312 ms</span>';
+    } else {
+      testBox = '<span class="muted" style="flex:1;font-size:13px">Run a test charge of RM 1.00 (refunded instantly).</span>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-action="gwTest">Test connection</button>';
+    }
+
+    var ok = gw.test === "ok";
+
+    return (
+      '<div class="overlay-scrim" data-action="closeOverlay"></div>' +
+      '<div class="drawer" style="--drawer-width:460px" role="dialog" aria-modal="true" aria-labelledby="gatewayTitle">' +
+      '<div class="drawer-head"><div class="drawer-title" id="gatewayTitle">Add Gateway</div>' +
+      '<button type="button" class="icon-btn" data-action="closeOverlay" aria-label="Close">&times;</button></div>' +
+      '<div class="drawer-body" style="gap:18px">' +
+      '<div class="field">Provider<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' + providers + "</div></div>" +
+      fields +
+      '<label class="checkbox-row"><input type="checkbox" data-change="gwDefault"' + (gw.isDefault ? " checked" : "") + ">Make this the default gateway for card purchases</label>" +
+      '<div role="status" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid ' +
+      (ok ? "var(--success);background:var(--pill-success-bg)" : "var(--line);background:var(--bg)") + '">' + testBox + "</div>" +
+      "</div>" +
+      '<div class="drawer-foot"><button type="button" class="btn btn-outline" data-action="closeOverlay">Cancel</button>' +
+      '<button type="button" class="btn ' + (ok ? "btn-primary" : "btn-soft") + '" data-action="saveGateway">' + (ok ? "Save gateway" : "Save as pending") + "</button></div>" +
+      "</div>"
+    );
   }
 
   /* ---------- Contract ---------- */
@@ -129,10 +186,12 @@
 
   function onOpen(ctx, kind) {
     if (kind === "qr") resetQr();
+    if (kind === "gateway") resetGateway();
   }
 
   function onClose() {
     resetQr();
+    resetGateway();
   }
 
   function createActions(api) {
@@ -173,6 +232,44 @@
         var d = ClientData.liveDesigns(api.ctx().designs);
         if (qr.mode === "amount") UI.showToast("Payment received · " + UI.formatRM(amountValue()) + " from Aisyah R.");
         else UI.showToast("Payment received · RM 18.00 from Aisyah R. · " + d.fixed.name);
+      },
+
+      gwProvider: function (el) {
+        clearTimeout(testTimer);
+        gw.provider = el.getAttribute("data-provider");
+        gw.test = "idle";
+        api.renderOverlay();
+      },
+      gwDefault: function (el) {
+        gw.isDefault = el.checked;
+      },
+      gwTest: function () {
+        gw.test = "testing";
+        api.renderOverlay();
+        clearTimeout(testTimer);
+        testTimer = setTimeout(function () {
+          if (api.state.overlay !== "gateway") return;
+          gw.test = "ok";
+          api.renderOverlay();
+        }, 1400);
+      },
+      saveGateway: function () {
+        var ok = gw.test === "ok";
+        var list = api.state.gateways[api.state.tenantKey];
+        var entry = {
+          provider: gw.provider,
+          detail: ok ? "Connected just now" : "Awaiting verification",
+          status: ok ? "Active" : "Pending",
+          isDefault: ok && gw.isDefault
+        };
+        if (entry.isDefault) list.forEach(function (g) { g.isDefault = false; });
+        list.push(entry);
+        var message = ok
+          ? entry.provider + " connected" + (entry.isDefault ? " and set as default" : "")
+          : entry.provider + " saved · pending verification";
+        api.closeOverlay();
+        api.renderMain();
+        UI.showToast(message, ok ? "success" : "warning");
       }
     };
   }
