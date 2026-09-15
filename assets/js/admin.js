@@ -422,6 +422,7 @@
       els.overlay.innerHTML = "";
     }
     document.body.style.overflow = state.overlay ? "hidden" : "";
+    document.body.classList.toggle("has-overlay", !!state.overlay);
   }
 
   function render() {

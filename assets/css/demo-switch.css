@@ -13,6 +13,12 @@
   font-size: 12px;
 }
 
+/* Never cover drawer, modal or sheet actions: hide while an overlay, mobile nav or scan screen is open */
+body.has-overlay .demo-switch,
+.shell.nav-open ~ #demoSwitch .demo-switch {
+  display: none;
+}
+
 .demo-switch-toggle {
   display: none;
   width: 44px;

@@ -72,6 +72,7 @@
   function renderOverlay() {
     els.overlay.innerHTML = state.overlay ? ClientOverlays.render(ctx()) : "";
     document.body.style.overflow = state.overlay ? "hidden" : "";
+    document.body.classList.toggle("has-overlay", !!state.overlay);
     if (state.overlay) ClientOverlays.afterRender(ctx(), els.overlay);
   }
 
