@@ -18,8 +18,9 @@ and Customer App artboards) and follow the design brief's palette, type scale, m
 
 | Page | Who | What you can try |
 |------|-----|------------------|
-| `index.html` | Everyone | Foundation hub: three tenant card templates (tap to flip), palette, type scale, component sheet, links into each app |
-| `login.html` | Everyone | Demo sign in for Admin, Client (pick a tenant) or Customer |
+| `index.html` | Everyone | Landing page (desktop and mobile): hero with Log in, the three personas, how it works, card types, sample stats and a Log in call to action |
+| `foundation.html` | Everyone | Foundation hub: three tenant card templates (tap to flip), palette, type scale, component sheet, links into each app |
+| `login.html` | Everyone | Single sign in with demo account buttons (Admin, Client, Customer 1, Customer 2) or any email and password |
 | `admin.html` | Platform admin | Main dashboard, Analysis tabs and ranges, User table with filters, invite drawer, Setting with suspend-client confirmation |
 | `client.html` | Merchant | Main dashboard, Payment QR popup (Static or Amount QR with 5-minute timer), Analysis, Customer List, Setting (profile, card design studio, payment gateways with Add Gateway drawer, staff, notifications) |
 | `customer.html` | Customer | Wallet with tap-to-flip cards, gift inbox (accept or decline), Send a gift, Scan and Pay (fixed, open value with top-up, voucher), Buy a card, Profile and history |
@@ -29,16 +30,25 @@ switch between Senja Coffee, Lumi Spa and Page & Ink.
 
 ## Demo login
 
-**Any email and any password works.** The form is pre-filled for each role, so one tap on **Sign in** is enough.
+There is **one sign-in page** for the whole prototype. Tap a demo account button to sign in instantly:
 
-| Role | Pre-filled email |
-|------|------------------|
-| Admin | `alice@giftwell.my` |
-| Client | `farid@senjacoffee.my`, `clara@lumispa.my` or `jonas@pageandink.my` (follows the tenant) |
-| Customer | `aisyah.r@gmail.com` |
+| Demo button | Email | Opens |
+|-------------|-------|-------|
+| Admin | `alice@giftwell.my` | Admin console |
+| Client | `farid@senjacoffee.my` | Client console for Senja Coffee (the coloured dots still switch merchants) |
+| Customer 1 | `aisyah.r@gmail.com` | Customer app with Aisyah's wallet (4 cards, 1 gift waiting) |
+| Customer 2 | `weiling.tan@gmail.com` | Customer app with Wei Ling's own wallet, history and sent gifts |
 
-Opening an app page without signing in redirects to the login page for that role. Each role keeps its own demo
-session in the browser's localStorage; **Sign out** clears it.
+**Any email and any password also works.** The email's domain decides where you land:
+
+| Email ends with | Opens |
+|-----------------|-------|
+| `@giftwell.my` | Admin console |
+| `@senjacoffee.my`, `@lumispa.my`, `@pageandink.my` | That merchant's Client console |
+| anything else | Customer app (Customer 1 wallet, or Customer 2 for `weiling.tan@gmail.com`) |
+
+One demo session is kept in the browser's localStorage. Opening an app that does not match the signed-in account
+returns you to the sign-in page; **Sign out** clears the session.
 
 ## How to open
 
@@ -63,9 +73,9 @@ The customer app is mobile-only by design, so it is never stretched across a wid
 ## Structure
 
 ```
-index.html  login.html  admin.html  client.html  customer.html
-assets/css/  tokens.css  base.css  gift-card.css  login.css  console.css  demo-switch.css  customer.css
-assets/js/   ui.js  auth.js  login.js  admin.js
+index.html  foundation.html  login.html  admin.html  client.html  customer.html
+assets/css/  tokens.css  base.css  gift-card.css  landing.css  login.css  console.css  demo-switch.css  customer.css
+assets/js/   ui.js  auth.js  landing.js  login.js  admin.js
              client-data.js  client-screens.js  client-overlays.js  client.js
              customer-data.js  customer-screens.js  customer-flows.js  customer.js
 ```
