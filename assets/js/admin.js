@@ -48,6 +48,19 @@
     { card: "Slow Sunday", client: "Lumi Spa", type: "Fixed", sold: 96, redeemed: 40, revenue: "RM 19,200" }
   ];
 
+  var TEMPLATES = [
+    { name: "Gift received", preview: "Someone sent you a {{card}} from {{client}} — open the gift app to accept." },
+    { name: "Payment receipt", preview: "You paid RM {{amount}} at {{client}}. Remaining balance RM {{balance}}." },
+    { name: "Card expiring soon", preview: "Your {{card}} expires in 30 days. RM {{balance}} left to spend." },
+    { name: "Gateway status change", preview: "{{provider}} is now {{status}} for {{client}}." }
+  ];
+
+  var ADMINS = [
+    { name: "Alice Kwan", email: "alice@giftwell.my", role: "Super admin" },
+    { name: "Marcus Tan", email: "marcus@giftwell.my", role: "Admin" },
+    { name: "Priya Nair", email: "priya@giftwell.my", role: "Finance" }
+  ];
+
   var NAV = [["main", "Main"], ["analysis", "Analysis"], ["user", "User"], ["setting", "Setting"]];
 
   /* ---------- State ---------- */
@@ -60,6 +73,18 @@
     roleFilter: "All",
     statusFilter: "All",
     clientStatus: { "Senja Coffee": "Active", "Lumi Spa": "Active", "Page & Ink": "Onboarding" },
+    users: [
+      { name: "Alice Kwan", email: "alice@giftwell.my", role: "Admin", tenant: "—", last: "2 min ago", status: "Active" },
+      { name: "Marcus Tan", email: "marcus@giftwell.my", role: "Admin", tenant: "—", last: "Yesterday", status: "Active" },
+      { name: "Farid Senja", email: "farid@senjacoffee.my", role: "Client staff", tenant: "Senja Coffee", last: "14 min ago", status: "Active" },
+      { name: "Clara Wong", email: "clara@lumispa.my", role: "Client staff", tenant: "Lumi Spa", last: "1 h ago", status: "Active" },
+      { name: "Jonas Lim", email: "jonas@pageandink.my", role: "Client staff", tenant: "Page & Ink", last: "3 days ago", status: "Pending" },
+      { name: "Aisyah Rahman", email: "aisyah.r@gmail.com", role: "Customer", tenant: "—", last: "Today", status: "Active" },
+      { name: "Daniel Lee", email: "daniel.lee@outlook.com", role: "Customer", tenant: "—", last: "4 days ago", status: "Active" },
+      { name: "Hafiz Omar", email: "hafiz.o@gmail.com", role: "Customer", tenant: "—", last: "2 weeks ago", status: "Suspended" }
+    ],
+    invite: { name: "", email: "", role: "Admin", tenant: "Senja Coffee" },
+    suspendTarget: "Senja Coffee",
     overlay: null
   };
 
@@ -217,12 +242,120 @@
     );
   }
 
+  function filteredUsers() {
+    var q = state.userSearch.trim().toLowerCase();
+    return state.users
+      .map(function (u, i) { return { user: u, index: i }; })
+      .filter(function (item) {
+        var u = item.user;
+        return (u.name + " " + u.email).toLowerCase().indexOf(q) >= 0 &&
+          (state.roleFilter === "All" || u.role === state.roleFilter) &&
+          (state.statusFilter === "All" || u.status === state.statusFilter);
+      });
+  }
+
+  function userRowsHtml(list) {
+    return list.map(function (item) {
+      var u = item.user;
+      var suspended = u.status === "Suspended";
+      return (
+        "<tr>" +
+        '<td><div class="user-cell"><span class="avatar" style="--size:30px">' + esc(UI.initials(u.name)) + '</span><div style="min-width:0"><div style="font-weight:600">' +
+        esc(u.name) + '</div><div class="row-sub">' + esc(u.email) + "</div></div></div></td>" +
+        "<td>" + esc(u.role) + '</td><td class="muted">' + esc(u.tenant) + '</td><td class="muted">' + esc(u.last) + "</td>" +
+        "<td>" + UI.pill(u.status) + "</td>" +
+        '<td><div class="row-actions">' +
+        '<button type="button" class="btn btn-outline btn-sm" data-action="viewUser" data-id="' + item.index + '">View</button>' +
+        '<button type="button" class="btn btn-outline btn-sm" data-action="toggleUser" data-id="' + item.index + '" style="color:' + (suspended ? "var(--success)" : "var(--danger)") + '">' +
+        (suspended ? "Reinstate" : "Suspend") + "</button>" +
+        '<button type="button" class="btn btn-outline btn-sm" data-action="resetUser" data-id="' + item.index + '">Reset password</button>' +
+        "</div></td></tr>"
+      );
+    }).join("");
+  }
+
+  function renderUserResults() {
+    var list = filteredUsers();
+    var body = document.getElementById("userRows");
+    if (!body) return;
+    body.innerHTML = userRowsHtml(list);
+    document.getElementById("userEmpty").hidden = list.length > 0;
+    document.getElementById("userCount").textContent = state.users.length;
+  }
+
+  function selectHtml(action, value, options) {
+    return (
+      '<select class="select" data-change="' + action + '">' +
+      options.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (o[0] === value ? " selected" : "") + ">" + esc(o[1]) + "</option>";
+      }).join("") +
+      "</select>"
+    );
+  }
+
   function renderUserScreen() {
-    return '<div class="screen">' + pageHead("User", "Users across all roles") + '<div class="panel empty-state">User management is being prepared.</div></div>';
+    var list = filteredUsers();
+    return (
+      '<div class="screen screen-tight">' +
+      pageHead("User", '<span id="userCount">' + state.users.length + "</span> users across all roles",
+        '<button type="button" class="btn btn-primary" data-action="openInvite">Invite user</button>') +
+      '<div class="filters">' +
+      '<input class="input grow" type="search" placeholder="Search name or email" aria-label="Search users" data-input="userSearch" value="' + esc(state.userSearch) + '">' +
+      selectHtml("roleFilter", state.roleFilter, [["All", "All roles"], ["Admin", "Admin"], ["Client staff", "Client staff"], ["Customer", "Customer"]]) +
+      selectHtml("statusFilter", state.statusFilter, [["All", "All statuses"], ["Active", "Active"], ["Suspended", "Suspended"], ["Pending", "Pending"]]) +
+      "</div>" +
+      '<div class="panel panel-flush"><div class="table-wrap"><table class="table" style="min-width:760px">' +
+      '<thead><tr><th>Name</th><th>Role</th><th>Tenant</th><th>Last active</th><th>Status</th><th class="num">Actions</th></tr></thead>' +
+      '<tbody id="userRows">' + userRowsHtml(list) + "</tbody></table></div>" +
+      '<div class="empty-state" id="userEmpty"' + (list.length ? " hidden" : "") + ">No users match these filters.</div></div>" +
+      "</div>"
+    );
   }
 
   function renderSettingScreen() {
-    return '<div class="screen">' + pageHead("Setting", "Platform settings") + '<div class="panel empty-state">Platform settings are being prepared.</div></div>';
+    var templates = TEMPLATES.map(function (t) {
+      return (
+        '<div class="list-row"><div class="grow"><div class="row-title">' + esc(t.name) +
+        '</div><div class="row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(t.preview) + "</div></div>" +
+        '<button type="button" class="btn btn-outline btn-sm" data-action="editTemplate" data-name="' + esc(t.name) + '">Edit</button></div>'
+      );
+    }).join("");
+
+    var admins = ADMINS.map(function (a) {
+      return (
+        '<div class="list-row"><span class="avatar" style="--size:30px">' + esc(UI.initials(a.name)) + '</span><div class="grow"><div class="row-title">' +
+        esc(a.name) + '</div><div class="row-sub">' + esc(a.email) + '</div></div><span class="caption">' + esc(a.role) + "</span></div>"
+      );
+    }).join("");
+
+    var clientOptions = CLIENTS.map(function (c) { return [c.name, c.name]; });
+
+    return (
+      '<div class="screen screen-tight">' +
+      pageHead("Setting", "", '<button type="button" class="btn btn-primary" data-action="saveSettings">Save changes</button>') +
+      '<div class="settings-grid">' +
+
+      '<div class="panel settings-card"><div class="panel-title">Platform</div>' +
+      '<div class="row" style="--gap:14px"><span class="brand-mark" style="--size:56px;border-radius:14px">G</span>' +
+      '<button type="button" class="btn btn-outline btn-sm" data-action="replaceLogo">Replace logo</button></div>' +
+      '<label class="field">Platform name<input class="input" value="Giftwell"></label>' +
+      '<div class="two-col">' +
+      '<label class="field">Default card validity<span class="input-group"><input type="number" value="12" min="1" aria-label="Default card validity in months"><span class="affix">months</span></span></label>' +
+      '<label class="field">Platform fee<span class="input-group"><input type="number" value="3.5" step="0.1" min="0" aria-label="Platform fee percent"><span class="affix">%</span></span></label>' +
+      "</div></div>" +
+
+      '<div class="panel settings-card"><div class="panel-title">Notification templates</div><div>' + templates + "</div></div>" +
+
+      '<div class="panel settings-card"><div class="spread"><div class="panel-title">Admin accounts</div>' +
+      '<button type="button" class="btn btn-outline btn-sm" data-action="openInvite" data-role="Admin">Add admin</button></div><div>' + admins + "</div></div>" +
+
+      '<div class="panel settings-card danger-card"><div class="panel-title text-danger">Danger zone</div>' +
+      '<div class="muted" style="font-size:13px">Suspending a client freezes card sales and QR payments. Existing balances stay intact.</div>' +
+      '<div class="row-wrap" style="--gap:10px"><div style="flex:1 1 160px">' + selectHtml("suspendTarget", state.suspendTarget, clientOptions) + "</div>" +
+      '<button type="button" class="btn btn-danger-outline" data-action="askSuspend">Suspend client</button></div></div>' +
+
+      "</div></div>"
+    );
   }
 
   var SCREENS = { main: renderMainScreen, analysis: renderAnalysisScreen, user: renderUserScreen, setting: renderSettingScreen };
@@ -243,8 +376,52 @@
     els.main.innerHTML = SCREENS[state.screen]();
   }
 
+  function inviteDrawerHtml() {
+    var inv = state.invite;
+    var tenantOptions = CLIENTS.map(function (c) { return [c.name, c.name]; });
+    return (
+      '<div class="overlay-scrim" data-action="closeOverlay"></div>' +
+      '<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">' +
+      '<div class="drawer-head"><div class="drawer-title" id="inviteTitle">Invite user</div>' +
+      '<button type="button" class="icon-btn" data-action="closeOverlay" aria-label="Close">&times;</button></div>' +
+      '<div class="drawer-body">' +
+      '<label class="field">Full name<input class="input" id="inviteName" data-input="inviteName" placeholder="e.g. Mei Chen" value="' + esc(inv.name) + '"></label>' +
+      '<label class="field">Email<input class="input" type="email" inputmode="email" data-input="inviteEmail" placeholder="name@company.com" value="' + esc(inv.email) + '"></label>' +
+      '<label class="field">Role' + selectHtml("inviteRole", inv.role, [["Admin", "Admin"], ["Client staff", "Client staff"]]) + "</label>" +
+      '<label class="field" id="inviteTenantField"' + (inv.role === "Client staff" ? "" : " hidden") + ">Tenant" + selectHtml("inviteTenant", inv.tenant, tenantOptions) + "</label>" +
+      '<div class="form-error" id="inviteError" role="alert" hidden>Name and a valid email are required.</div>' +
+      "</div>" +
+      '<div class="drawer-foot"><button type="button" class="btn btn-outline" data-action="closeOverlay">Cancel</button>' +
+      '<button type="button" class="btn btn-primary" data-action="sendInvite">Send invite</button></div>' +
+      "</div>"
+    );
+  }
+
+  function suspendModalHtml() {
+    return (
+      '<div class="modal-scrim" data-action="closeOverlay">' +
+      '<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="suspendTitle">' +
+      '<div class="modal-title" id="suspendTitle">Suspend ' + esc(state.suspendTarget) + "?</div>" +
+      '<p class="muted" style="margin:0">Their sales and payment QR stop immediately. Customers keep their balances. You can reinstate at any time.</p>' +
+      '<div class="modal-actions"><button type="button" class="btn btn-outline" data-action="closeOverlay">Keep active</button>' +
+      '<button type="button" class="btn btn-danger" data-action="confirmSuspend">Suspend</button></div>' +
+      "</div></div>"
+    );
+  }
+
   function renderOverlay() {
-    els.overlay.innerHTML = "";
+    if (state.overlay === "invite") {
+      els.overlay.innerHTML = inviteDrawerHtml();
+      var first = document.getElementById("inviteName");
+      if (first) first.focus();
+    } else if (state.overlay === "suspend") {
+      els.overlay.innerHTML = suspendModalHtml();
+      var confirmBtn = els.overlay.querySelector("[data-action='confirmSuspend']");
+      if (confirmBtn) confirmBtn.focus();
+    } else {
+      els.overlay.innerHTML = "";
+    }
+    document.body.style.overflow = state.overlay ? "hidden" : "";
   }
 
   function render() {
@@ -282,6 +459,82 @@
     },
     setTab: function (el) { state.tab = el.getAttribute("data-tab"); renderMain(); },
     setRange: function (el) { state.range = el.getAttribute("data-range"); renderMain(); },
+
+    userSearch: function (el) { state.userSearch = el.value; renderUserResults(); },
+    roleFilter: function (el) { state.roleFilter = el.value; renderUserResults(); },
+    statusFilter: function (el) { state.statusFilter = el.value; renderUserResults(); },
+    viewUser: function (el) {
+      var u = state.users[Number(el.getAttribute("data-id"))];
+      if (u) UI.showToast("Opening " + u.name + "’s profile", "info");
+    },
+    resetUser: function (el) {
+      var u = state.users[Number(el.getAttribute("data-id"))];
+      if (u) UI.showToast("Password reset link sent to " + u.email, "info");
+    },
+    toggleUser: function (el) {
+      var u = state.users[Number(el.getAttribute("data-id"))];
+      if (!u) return;
+      var wasSuspended = u.status === "Suspended";
+      u.status = wasSuspended ? "Active" : "Suspended";
+      renderUserResults();
+      UI.showToast(wasSuspended ? u.name + " reinstated" : u.name + " suspended", wasSuspended ? "success" : "danger");
+    },
+
+    openInvite: function (el) {
+      state.invite = { name: "", email: "", role: el.getAttribute("data-role") || "Admin", tenant: "Senja Coffee" };
+      state.overlay = "invite";
+      setNavOpen(false);
+      renderOverlay();
+    },
+    inviteName: function (el) { state.invite.name = el.value; },
+    inviteEmail: function (el) { state.invite.email = el.value; },
+    inviteRole: function (el) {
+      state.invite.role = el.value;
+      document.getElementById("inviteTenantField").hidden = el.value !== "Client staff";
+    },
+    inviteTenant: function (el) { state.invite.tenant = el.value; },
+    sendInvite: function () {
+      var inv = state.invite;
+      var name = inv.name.trim();
+      var email = inv.email.trim();
+      if (!name || !/^\S+@\S+\.\S+$/.test(email)) {
+        document.getElementById("inviteError").hidden = false;
+        return;
+      }
+      state.users.unshift({
+        name: name,
+        email: email,
+        role: inv.role,
+        tenant: inv.role === "Client staff" ? inv.tenant : "—",
+        last: "Never",
+        status: "Pending"
+      });
+      state.overlay = null;
+      state.screen = "user";
+      state.userSearch = "";
+      state.roleFilter = "All";
+      state.statusFilter = "All";
+      render();
+      UI.showToast("Invite sent to " + email);
+    },
+
+    closeOverlay: function (el, event) {
+      if (el.classList.contains("modal-scrim") && event.target !== el) return;
+      state.overlay = null;
+      renderOverlay();
+    },
+    suspendTarget: function (el) { state.suspendTarget = el.value; },
+    askSuspend: function () { state.overlay = "suspend"; renderOverlay(); },
+    confirmSuspend: function () {
+      state.clientStatus[state.suspendTarget] = "Suspended";
+      state.overlay = null;
+      renderOverlay();
+      UI.showToast(state.suspendTarget + " suspended", "danger");
+    },
+    saveSettings: function () { UI.showToast("Platform settings saved"); },
+    replaceLogo: function () { UI.showToast("Logo upload opens here in the live system", "info"); },
+    editTemplate: function (el) { UI.showToast("Editing “" + el.getAttribute("data-name") + "” template", "info"); },
+
     signOut: function () { Auth.signOut("admin"); },
     toggleDemoSwitch: UI.toggleDemoSwitch
   };
