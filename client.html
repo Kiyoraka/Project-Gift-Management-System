@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Client Console - Giftwell</title>
+<meta name="description" content="Giftwell merchant console prototype for Senja Coffee, Lumi Spa and Page &amp; Ink.">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/gift-card.css">
+<link rel="stylesheet" href="assets/css/console.css">
+<link rel="stylesheet" href="assets/css/demo-switch.css">
+</head>
+<body class="console-body">
+<div class="shell" id="shell">
+
+  <header class="topbar">
+    <button type="button" class="icon-btn-outline" data-action="openNav" aria-label="Open menu" aria-controls="sidebar"></button>
+    <div class="topbar-brand"><span class="brand-mark" id="topbarMark">S</span><span id="topbarName">Senja Coffee</span></div>
+    <span class="avatar" id="topbarAvatar">FS</span>
+  </header>
+
+  <div class="nav-scrim" data-action="closeNav"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Client navigation">
+    <div class="sidebar-head">
+      <span class="brand-mark" id="sidebarMark">S</span>
+      <div class="sidebar-text">
+        <div class="sidebar-title" id="sidebarName">Senja Coffee</div>
+        <div class="caption" id="sidebarBusiness">Specialty coffee bar</div>
+      </div>
+      <button type="button" class="icon-btn sidebar-close" data-action="closeNav" aria-label="Close menu">&times;</button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-cta">
+      <button type="button" class="btn btn-brand" data-action="openQr" title="Show Payment QR" id="sidebarQr"></button>
+    </div>
+    <div class="sidebar-foot">
+      <span class="avatar" style="--size:34px;font-size:12px" id="footAvatar">FS</span>
+      <div class="grow">
+        <div class="sidebar-user" id="footName">Farid Senja</div>
+        <div class="caption" id="footTitle">Owner</div>
+      </div>
+      <button type="button" class="signout-btn" data-action="signOut" aria-label="Sign out" title="Sign out"></button>
+    </div>
+  </aside>
+
+  <main class="main" id="main" tabindex="-1"></main>
+</div>
+
+<div id="overlay"></div>
+<div id="demoSwitch"></div>
+
+<noscript><p style="padding:24px">This prototype needs JavaScript enabled.</p></noscript>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/client-data.js"></script>
+<script src="assets/js/client-screens.js"></script>
+<script src="assets/js/client-overlays.js"></script>
+<script src="assets/js/client.js"></script>
+</body>
+</html>
