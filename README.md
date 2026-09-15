@@ -1,10 +1,10 @@
-# Giftwell - Gift Management System (Proposal Demo)
+# Giftwell - Gift Management System (Demo)
 
 Software Version: 0.1.0 (hardcoded prototype)
 
 ## Description
 
-A clickable proposal demo of a multi-tenant gift card platform, prepared for TNEX Malaysia Sdn Bhd.
+A clickable demo of a multi-tenant gift card platform.
 A platform **Admin** oversees everything, three sample **Clients** (merchants) sell their own branded gift cards
 and take payment through their own gateways, and **Customers** buy, send, receive and spend gift cards from a phone.
 
