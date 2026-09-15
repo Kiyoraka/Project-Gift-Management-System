@@ -289,14 +289,23 @@
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var ms = reduce ? 1 : duration || 400;
     var start = null;
+    var done = false;
     function step(now) {
+      if (done) return;
       if (start === null) start = now;
       var k = Math.min(1, (now - start) / ms);
       var eased = 1 - Math.pow(1 - k, 3);
       el.textContent = formatRM(from + (to - from) * eased);
       if (k < 1) requestAnimationFrame(step);
+      else done = true;
     }
     requestAnimationFrame(step);
+    /* Animation frames pause in background tabs; always land on the final balance. */
+    setTimeout(function () {
+      if (done) return;
+      done = true;
+      el.textContent = formatRM(to);
+    }, ms + 80);
   }
 
   /* ---------- Event delegation ----------
