@@ -1,0 +1,107 @@
+/* Gift Management System - design tokens
+   Velvet plum for the platform, gold ribbon for the gift moment.
+   The tenant's card artwork is always the colour. */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap");
+
+:root {
+  color-scheme: light;
+
+  /* Palette (light) */
+  --bg: #FAF8FC;
+  --surface: #FFFFFF;
+  --surface-2: #F1EDF6;
+  --ink: #1F1B2A;
+  --ink-muted: #6B647A;
+  --line: #E4DEEC;
+  --primary: #5B2A86;
+  --primary-hover: #4A2170;
+  --primary-soft: #EEE4F7;
+  --accent: #D9A441;
+  --accent-light: #E4B85C;
+  --accent-dark: #B8862B;
+  --success: #2E9E6B;
+  --warning: #D98A2B;
+  --danger: #D64545;
+  --info: #3E7CB1;
+  --backdrop: #E9E4F0;
+  --scan-bg: #0E0C14;
+
+  /* Dark palette values, kept for a later dark-theme pass (not applied yet) */
+  --dark-bg: #121018;
+  --dark-surface: #1B1824;
+  --dark-surface-2: #252131;
+  --dark-ink: #F2EEF7;
+  --dark-ink-muted: #A59DB5;
+  --dark-line: #322D40;
+  --dark-primary: #A77BD6;
+  --dark-primary-soft: #2E2140;
+
+  /* Status pill pairs (background / foreground) */
+  --pill-success-bg: #E6F4EC;
+  --pill-success-fg: #2E9E6B;
+  --pill-warning-bg: #FBF0DF;
+  --pill-warning-fg: #B86F1C;
+  --pill-danger-bg: #FBE5E5;
+  --pill-danger-fg: #D64545;
+  --pill-neutral-bg: #F1EDF6;
+  --pill-neutral-fg: #6B647A;
+  --pill-primary-bg: #EEE4F7;
+  --pill-primary-fg: #5B2A86;
+  --pill-gold-bg: #FBF3DF;
+  --pill-gold-fg: #9A6F1C;
+
+  /* Tenant brands */
+  --senja-brand: #C2603E;
+  --senja-art: #F6EFE6;
+  --lumi-brand: #7FA68C;
+  --lumi-art: #EEF3EF;
+  --page-brand: #1E2A4A;
+  --page-art: #F3EDE0;
+
+  /* Active tenant brand (Client console overrides per tenant) */
+  --brand: var(--primary);
+
+  /* Typography */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --text-title: 32px;
+  --text-stat: 30px;
+  --text-body: 14px;
+  --text-caption: 12px;
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius-control: 10px;
+  --radius-panel: 12px;
+  --radius-tile: 16px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
+
+  /* Spacing (base unit 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Shadows */
+  --shadow-panel: 0 4px 20px rgba(31, 27, 42, 0.06);
+  --shadow-raised: 0 12px 30px rgba(31, 27, 42, 0.14);
+  --shadow-modal: 0 30px 80px rgba(31, 27, 42, 0.35);
+  --shadow-sheet: 0 -12px 40px rgba(31, 27, 42, 0.25);
+  --scrim: rgba(31, 27, 42, 0.45);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --text-title: 26px;
+    --text-stat: 24px;
+  }
+}
