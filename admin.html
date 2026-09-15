@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Admin Console - Giftwell</title>
+<meta name="description" content="Giftwell platform admin console prototype.">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/gift-card.css">
+<link rel="stylesheet" href="assets/css/console.css">
+<link rel="stylesheet" href="assets/css/demo-switch.css">
+</head>
+<body class="console-body">
+<div class="shell" id="shell">
+
+  <header class="topbar">
+    <button type="button" class="icon-btn-outline" data-action="openNav" aria-label="Open menu" aria-controls="sidebar"></button>
+    <div class="topbar-brand"><span class="brand-mark">G</span><span>Giftwell Admin</span></div>
+    <span class="avatar" id="topbarAvatar">AK</span>
+  </header>
+
+  <div class="nav-scrim" data-action="closeNav"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Admin navigation">
+    <div class="sidebar-head">
+      <span class="brand-mark">G</span>
+      <div class="sidebar-text">
+        <div class="sidebar-title">Giftwell</div>
+        <div class="caption">Platform admin</div>
+      </div>
+      <button type="button" class="icon-btn sidebar-close" data-action="closeNav" aria-label="Close menu">&times;</button>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <span class="avatar" style="--size:34px;font-size:12px" id="footAvatar">AK</span>
+      <div class="grow">
+        <div class="sidebar-user" id="footName">Alice Kwan</div>
+        <div class="caption" id="footTitle">Super admin</div>
+      </div>
+      <button type="button" class="signout-btn" data-action="signOut" aria-label="Sign out" title="Sign out"></button>
+    </div>
+  </aside>
+
+  <main class="main" id="main" tabindex="-1"></main>
+</div>
+
+<div id="overlay"></div>
+<div id="demoSwitch"></div>
+
+<noscript><p style="padding:24px">This prototype needs JavaScript enabled.</p></noscript>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>
