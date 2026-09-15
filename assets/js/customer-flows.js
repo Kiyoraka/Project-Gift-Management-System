@@ -276,6 +276,46 @@
     if (error) error.hidden = !state.buy.error;
   }
 
+  /* ---------- Shop tab ---------- */
+
+  var SHOP_FILTERS = ["All", "senja", "lumi", "page"];
+
+  function shop(ctx) {
+    var s = ctx.state;
+    var chips = SHOP_FILTERS.map(function (key) {
+      var label = key === "All" ? "All" : tenant(key).name;
+      return '<button type="button" class="chip' + (s.shopFilter === key ? " is-active" : "") + '" data-action="shopFilter" data-filter="' + key + '">' + esc(label) + "</button>";
+    }).join("");
+
+    var keys = Object.keys(CustomerData.TENANTS).filter(function (key) { return s.shopFilter === "All" || s.shopFilter === key; });
+
+    var sections = keys.map(function (key) {
+      var tn = tenant(key);
+      var designs = tn.designs.map(function (design, i) {
+        var label = design.type === "fixed" ? "RM 50 · 100 · 200" : design.type === "open" ? "RM 10 – 1,000" : design.item;
+        return (
+          "<div>" + UI.renderGiftCard(CustomerData.designCard(key, design, label), { action: "shopDesign", id: key + ":" + i, noBack: true, ariaLabel: "Buy " + design.name + " from " + tn.name }) +
+          '<div class="spread caption" style="margin-top:8px"><span>' + esc(UI.typeLabelLong(design.type)) + "</span><span>" +
+          (design.type === "voucher" ? UI.formatRM(design.price) : "Valid " + esc(design.validity)) + "</span></div></div>"
+        );
+      }).join("");
+      return (
+        '<section class="stack" style="--gap:12px" aria-label="' + esc(tn.name) + '">' +
+        '<div class="row" style="--gap:12px"><span class="brand-mark" style="--size:40px;--mark:' + tn.brand + ';border-radius:12px">' + esc(tn.name.charAt(0)) + "</span>" +
+        '<div style="flex:1;min-width:0"><div style="font-weight:600">' + esc(tn.name) + '</div><div class="caption">' + esc(tn.business) + " · pay with " + esc(tn.gateway) + "</div></div></div>" +
+        '<div class="stack" style="--gap:14px">' + designs + "</div></section>"
+      );
+    }).join("");
+
+    return (
+      '<div class="stack" style="--gap:18px">' +
+      '<div class="spread" style="align-items:flex-end"><h1 class="app-title">Shop</h1><span class="caption">3 merchants · tap a card to buy</span></div>' +
+      '<div class="chip-scroll" role="toolbar" aria-label="Filter by merchant">' + chips + "</div>" +
+      sections +
+      "</div>"
+    );
+  }
+
   /* ---------- Contract ---------- */
 
   function overlay(ctx) {
@@ -415,6 +455,18 @@
       },
 
       startBuy: function () { openBuy(null); },
+      shopFilter: function (el) {
+        state.shopFilter = el.getAttribute("data-filter");
+        api.renderMain();
+      },
+      shopDesign: function (el) {
+        var parts = String(el.getAttribute("data-id")).split(":");
+        openBuy(parts[0]);
+        state.buy.designIndex = Number(parts[1]);
+        state.buy.step = "amount";
+        state.buy.fromShop = true;
+        api.renderOverlay();
+      },
       buyClient: function (el) {
         state.buy.client = el.getAttribute("data-client");
         state.buy.step = "design";
@@ -442,7 +494,7 @@
       },
       buyBack: function () {
         var b = state.buy;
-        if (b.step === "amount") b.step = "design";
+        if (b.step === "amount" && !b.fromShop) b.step = "design";
         else if (b.step === "design") b.step = "client";
         else {
           state.overlay = null;
@@ -492,7 +544,7 @@
         state.send = api.blankSend();
         state.send.step = "details";
         state.send.cardId = id;
-        api.goTab("send");
+        api.goTab("gifts");
       },
       buyClose: function () {
         var id = state.buy.newId;
@@ -506,6 +558,7 @@
   }
 
   window.CustomerFlows = {
+    shop: shop,
     scan: scan,
     overlay: overlay,
     createActions: createActions

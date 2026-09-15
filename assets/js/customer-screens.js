@@ -1,4 +1,4 @@
-/* Customer app - screens: Wallet, Send, Profile and the Gift inbox sheet.
+/* Customer app - screens: Wallet, Gifts (inbox, Send a gift, history), Profile and the opened-gift sheet.
    Each renderer takes ctx { state, session } and returns HTML; createActions(api) returns the screen actions.
    Requires ui.js and customer-data.js. Exposes a single global: CustomerScreens */
 
@@ -14,6 +14,13 @@
 
   function findCard(state, id) {
     return state.cards.filter(function (c) { return String(c.id) === String(id); })[0];
+  }
+
+  function giftCardView(gift) {
+    return CustomerData.cardView({
+      client: gift.card.client, name: gift.card.name, type: gift.card.type, item: gift.card.item,
+      balance: gift.card.balance, number: gift.card.number, expiry: gift.card.expiry, status: "active"
+    });
   }
 
   /* ---------- Wallet ---------- */
@@ -57,61 +64,100 @@
       '<span class="avatar" style="--size:56px;font-family:var(--font-display);font-size:26px">&#10022;</span>' +
       '<div class="section-title" style="font-size:20px">No cards here yet</div>' +
       '<div class="muted">Buy a gift card for yourself or send one to someone who deserves it.</div>' +
-      '<button type="button" class="btn btn-primary" style="margin-top:6px;border-radius:12px;padding:12px 20px" data-action="startBuy">Buy a card</button></div>';
+      '<button type="button" class="btn btn-primary" style="margin-top:6px;border-radius:12px;padding:12px 20px" data-action="goShop">Browse the shop</button></div>';
 
     return (
       '<div class="stack">' +
       '<div class="spread" style="align-items:flex-end"><h1 class="app-title">Wallet</h1><span class="caption">' + active.length + " cards · " + UI.formatRM(spendable) + " to spend</span></div>" +
       '<div class="chip-scroll" role="toolbar" aria-label="Filter by merchant">' + chips + "</div>" +
       (visible.length ? '<div class="stack" style="--gap:14px">' + cards + "</div>" : empty) +
-      (visible.length ? '<button type="button" class="btn btn-primary btn-app" data-action="startBuy">Buy a card</button>' : "") +
+      (visible.length ? '<button type="button" class="btn btn-outline btn-app" data-action="goShop">' + UI.icon("shop", 18) + "<span>Buy another card</span></button>" : "") +
       "</div>"
     );
   }
 
-  /* ---------- Gift inbox (sheet) ---------- */
+  /* ---------- Opened gift (sheet) ---------- */
 
   function inbox(ctx) {
     var s = ctx.state;
     var gift = s.pending.filter(function (g) { return g.id === s.giftId; })[0];
-    var body;
-
-    if (gift) {
-      var view = CustomerData.cardView({ client: gift.card.client, name: gift.card.name, type: gift.card.type, balance: gift.card.balance, number: gift.card.number, expiry: gift.card.expiry, status: "active" });
-      body =
-        '<div style="padding-top:8px">' + UI.renderGiftWrap(UI.renderGiftCard(view, { noBack: true })) +
-        '<div class="message-bubble"><div class="message-text">“' + esc(gift.message) + '”</div>' +
-        '<div class="caption" style="margin-top:8px">— ' + esc(gift.from) + " · " + esc(gift.received) + "</div></div></div>" +
-        '<div class="caption" style="text-align:center">Accept within ' + esc(gift.expiresIn) + " or it returns to " + esc(gift.from) + ".</div>" +
-        '<div class="row" style="--gap:10px">' +
-        '<button type="button" class="btn btn-outline btn-app" style="flex:1;color:var(--danger)" data-action="declineGift">Decline</button>' +
-        '<button type="button" class="btn btn-primary btn-app" style="flex:2" data-action="acceptGift">Accept gift</button></div>';
-    } else if (!s.pending.length) {
-      body = '<div class="muted" style="text-align:center;padding:24px">No gifts waiting. Sent and received gifts live in Profile › Gifts.</div>';
-    } else {
-      body = s.pending.map(function (g) {
-        var view = CustomerData.cardView({ client: g.card.client, name: g.card.name, type: g.card.type, balance: g.card.balance, number: g.card.number, expiry: g.card.expiry, status: "active" });
-        return (
-          '<button type="button" class="choice-btn" data-action="openGift" data-id="' + esc(g.id) + '">' +
-          '<span class="choice-thumb">' + UI.renderGiftWrap(UI.renderGiftCard(view, { noBack: true, flat: true }), true) + "</span>" +
-          '<span class="grow" style="flex:1;min-width:0"><span style="display:block;font-weight:600">From ' + esc(g.from) + '</span><span class="caption">' +
-          esc(view.tenant) + " · " + esc(view.name) + " · " + esc(g.received) + "</span></span>" +
-          '<span class="muted">' + UI.icon("chevronRight", 18) + "</span></button>"
-        );
-      }).join("");
-    }
+    if (!gift) return "";
+    var view = giftCardView(gift);
 
     return (
       '<div class="sheet-scrim" data-action="closeOverlay">' +
-      '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="inboxTitle">' +
-      '<div class="spread"><div class="section-title" id="inboxTitle">' + (gift ? "A gift for you" : "Gift inbox") + "</div>" +
+      '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="giftTitle">' +
+      '<div class="spread"><div class="section-title" id="giftTitle">A gift for you</div>' +
       '<button type="button" class="icon-btn" data-action="closeOverlay" aria-label="Close">&times;</button></div>' +
-      body +
+      '<div style="padding-top:8px">' + UI.renderGiftWrap(UI.renderGiftCard(view, { noBack: true })) +
+      '<div class="message-bubble"><div class="message-text">“' + esc(gift.message) + '”</div>' +
+      '<div class="caption" style="margin-top:8px">— ' + esc(gift.from) + " · " + esc(gift.received) + "</div></div></div>" +
+      '<div class="caption" style="text-align:center">Accept within ' + esc(gift.expiresIn) + " or it returns to " + esc(gift.from) + ".</div>" +
+      '<div class="row" style="--gap:10px">' +
+      '<button type="button" class="btn btn-outline btn-app" style="flex:1;color:var(--danger)" data-action="declineGift">Decline</button>' +
+      '<button type="button" class="btn btn-primary btn-app" style="flex:2" data-action="acceptGift">Accept gift</button></div>' +
       "</div></div>"
     );
   }
 
-  /* ---------- Send a gift ---------- */
+  /* ---------- Gifts tab ---------- */
+
+  function historyColor(row) {
+    if (row.kind === "spend") return "var(--ink)";
+    if (row.kind === "purchase") return "var(--success)";
+    if (row.dir === "received") return "var(--pill-gold-fg)";
+    return "var(--primary)";
+  }
+
+  function historyRows(rows, emptyText) {
+    if (!rows.length) return '<div class="muted" style="padding:16px 0;text-align:center">' + esc(emptyText) + "</div>";
+    return rows.map(function (h) {
+      var t = CustomerData.TENANTS[h.client];
+      return (
+        '<div class="list-row" style="padding:12px 0"><span class="brand-mark" style="--size:34px;--mark:' + t.brand + '">' + esc(t.name.charAt(0)) + "</span>" +
+        '<div class="grow"><div class="row-title">' + esc(h.title) + '</div><div class="row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(h.sub) + "</div></div>" +
+        '<div style="text-align:right"><div class="row-title" style="white-space:nowrap;color:' + historyColor(h) + '">' + esc(h.amount) + '</div><div class="caption" style="font-size:11px">' + esc(h.date) + "</div></div></div>"
+      );
+    }).join("");
+  }
+
+  function gifts(ctx) {
+    var s = ctx.state;
+    if (s.send.step !== "idle") return send(ctx);
+
+    var waiting = s.pending.length
+      ? s.pending.map(function (g) {
+          var view = giftCardView(g);
+          return (
+            '<button type="button" class="choice-btn" data-action="openGift" data-id="' + esc(g.id) + '">' +
+            '<span class="choice-thumb">' + UI.renderGiftWrap(UI.renderGiftCard(view, { noBack: true, flat: true }), true) + "</span>" +
+            '<span style="flex:1;min-width:0"><span style="display:block;font-weight:600">From ' + esc(g.from) + '</span><span class="caption">' +
+            esc(view.tenant) + " · " + esc(view.name) + " · " + esc(g.received) + "</span></span>" +
+            '<span class="muted">' + UI.icon("chevronRight", 18) + "</span></button>"
+          );
+        }).join("")
+      : '<div class="note-box">No gifts waiting right now.</div>';
+
+    var giftable = s.cards.filter(function (c) { return c.status === "active" && c.balance > 0; }).length;
+    var list = s.gifts.filter(function (g) { return g.dir === s.giftsTab; });
+
+    return (
+      '<div class="stack" style="--gap:18px">' +
+      '<div class="spread" style="align-items:flex-end"><h1 class="app-title">Gifts</h1>' +
+      (s.pending.length ? '<span class="pill pill-gold pill-sm">' + s.pending.length + " waiting</span>" : "") + "</div>" +
+      '<div class="stack" style="--gap:10px"><div class="stat-label">Waiting for you</div>' + waiting + "</div>" +
+      '<button type="button" class="btn btn-primary btn-app" data-action="startSend"' + (giftable ? "" : " disabled") + ">" +
+      UI.icon("send", 18) + "<span>Send a gift</span></button>" +
+      (giftable ? "" : '<div class="caption" style="text-align:center;margin-top:-8px">Buy a card first, then you can send it.</div>') +
+      '<div class="segmented" style="border-radius:12px" role="tablist" aria-label="Gift history">' +
+      '<button type="button" role="tab" class="' + (s.giftsTab === "received" ? "is-active" : "") + '" aria-selected="' + (s.giftsTab === "received") + '" data-action="giftsTab" data-tab="received">Received</button>' +
+      '<button type="button" role="tab" class="' + (s.giftsTab === "sent" ? "is-active" : "") + '" aria-selected="' + (s.giftsTab === "sent") + '" data-action="giftsTab" data-tab="sent">Sent</button></div>' +
+      '<div class="soft-panel soft-panel-pad">' + historyRows(list, s.giftsTab === "received" ? "No gifts received yet." : "No gifts sent yet.") + "</div>" +
+      "</div>"
+    );
+  }
+
+  /* ---------- Send a gift (runs inside the Gifts tab) ---------- */
 
   var SEND_TITLES = { pick: "Send a gift", details: "Who is it for?", preview: "Preview", done: "Sent" };
   var DEFAULT_MESSAGE = "A little something, just because.";
@@ -120,8 +166,8 @@
     return String(ctx.session.name || "Aisyah").split(" ")[0];
   }
 
-  function whenLabel(send) {
-    return send.when === "now" ? "delivered now" : "scheduled 20 Sep, 09:00";
+  function whenLabel(sd) {
+    return sd.when === "now" ? "delivered now" : "scheduled 20 Sep, 09:00";
   }
 
   function send(ctx) {
@@ -169,10 +215,10 @@
         '<div class="success-icon is-gold">' + UI.icon("check", 30, 2.4) + "</div>" +
         '<div class="section-title" style="font-size:24px">Gift on its way</div>' +
         '<div class="muted">' + esc(sent.name) + " from " + esc(sent.tenant) + " is waiting for " + esc(sd.phone) + ". We’ll tell you when they open it.</div>" +
-        '<button type="button" class="btn btn-outline" style="margin-top:10px;border-radius:12px;padding:12px 20px" data-action="sendReset">Back to wallet</button></div>';
+        '<button type="button" class="btn btn-outline" style="margin-top:10px;border-radius:12px;padding:12px 20px" data-action="sendReset">Back to gifts</button></div>';
     }
 
-    var canBack = step === "details" || step === "preview";
+    var canBack = step === "pick" || step === "details" || step === "preview";
 
     return (
       '<div class="stack">' +
@@ -186,16 +232,8 @@
 
   /* ---------- Profile ---------- */
 
-  function historyColor(row) {
-    if (row.kind === "spend") return "var(--ink)";
-    if (row.kind === "purchase") return "var(--success)";
-    if (row.dir === "received") return "var(--pill-gold-fg)";
-    return "var(--primary)";
-  }
-
   function profile(ctx) {
     var s = ctx.state;
-    var rows = s.histTab === "tx" ? s.history : s.gifts;
 
     var notifs = s.notifs.map(function (n, i) {
       return (
@@ -204,17 +242,6 @@
         '" data-action="profileNotif" data-index="' + i + '"></button></div>'
       );
     }).join("");
-
-    var history = rows.length
-      ? rows.map(function (h) {
-          var t = CustomerData.TENANTS[h.client];
-          return (
-            '<div class="list-row" style="padding:12px 0"><span class="brand-mark" style="--size:34px;--mark:' + t.brand + '">' + esc(t.name.charAt(0)) + "</span>" +
-            '<div class="grow"><div class="row-title">' + esc(h.title) + '</div><div class="row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(h.sub) + "</div></div>" +
-            '<div style="text-align:right"><div class="row-title" style="white-space:nowrap;color:' + historyColor(h) + '">' + esc(h.amount) + '</div><div class="caption" style="font-size:11px">' + esc(h.date) + "</div></div></div>"
-          );
-        }).join("")
-      : '<div class="muted" style="padding:16px 0;text-align:center">Nothing here yet.</div>';
 
     return (
       '<div class="stack" style="--gap:18px">' +
@@ -225,10 +252,8 @@
       '<div class="mono caption" style="font-size:13px;margin-top:2px">' + esc(s.account.phone) + "</div></div>" +
       '<button type="button" class="btn btn-outline btn-sm" data-action="editProfile">Edit</button></div>' +
       '<div class="soft-panel soft-panel-pad">' + notifs + "</div>" +
-      '<div class="segmented" style="border-radius:12px" role="tablist" aria-label="History">' +
-      '<button type="button" role="tab" class="' + (s.histTab === "tx" ? "is-active" : "") + '" aria-selected="' + (s.histTab === "tx") + '" data-action="histTab" data-tab="tx">Transactions</button>' +
-      '<button type="button" role="tab" class="' + (s.histTab === "gifts" ? "is-active" : "") + '" aria-selected="' + (s.histTab === "gifts") + '" data-action="histTab" data-tab="gifts">Gifts</button></div>' +
-      '<div class="soft-panel soft-panel-pad">' + history + "</div>" +
+      '<div class="stat-label">Transactions</div>' +
+      '<div class="soft-panel soft-panel-pad" style="margin-top:-8px">' + historyRows(s.history, "Nothing here yet.") + "</div>" +
       '<button type="button" class="btn btn-danger-outline btn-app" data-action="signOut">' + UI.icon("logout", 18) + "<span>Sign out</span></button>" +
       "</div>"
     );
@@ -238,6 +263,10 @@
 
   function createActions(api) {
     var state = api.state;
+
+    function currentGift() {
+      return state.pending.filter(function (g) { return g.id === state.giftId; })[0];
+    }
 
     return {
       walletFilter: function (el) {
@@ -251,24 +280,28 @@
         state.newId = null;
         api.renderMain();
       },
+      goShop: function () {
+        api.goTab("shop");
+      },
       sendFromWallet: function (el) {
         var card = findCard(state, el.getAttribute("data-id"));
         if (!card) return;
         state.send = api.blankSend();
         state.send.step = "details";
         state.send.cardId = card.id;
-        api.goTab("send");
+        api.goTab("gifts");
       },
       historyFromWallet: function () {
-        state.histTab = "tx";
         api.goTab("profile");
       },
+
       openGift: function (el) {
         state.giftId = el.getAttribute("data-id");
+        state.overlay = "inbox";
         api.renderOverlay();
       },
       acceptGift: function () {
-        var gift = state.pending.filter(function (g) { return g.id === state.giftId; })[0];
+        var gift = currentGift();
         if (!gift) return;
         var id = Date.now();
         state.cards.unshift({
@@ -287,6 +320,26 @@
         api.goTab("wallet");
         UI.showToast(gift.card.name + " added to your wallet");
       },
+      declineGift: function () {
+        var gift = currentGift();
+        if (!gift) return;
+        state.pending = state.pending.filter(function (g) { return g.id !== gift.id; });
+        state.overlay = null;
+        state.giftId = null;
+        api.render();
+        UI.showToast("Declined · card returned to " + gift.from, "danger");
+      },
+      giftsTab: function (el) {
+        state.giftsTab = el.getAttribute("data-tab");
+        api.renderMain();
+      },
+
+      startSend: function () {
+        state.send = api.blankSend();
+        state.send.step = "pick";
+        api.renderMain();
+        api.goTab("gifts");
+      },
       sendPick: function (el) {
         var card = findCard(state, el.getAttribute("data-id"));
         if (!card) return;
@@ -296,7 +349,10 @@
         api.renderMain();
       },
       sendBack: function () {
-        state.send.step = state.send.step === "preview" ? "details" : "pick";
+        var step = state.send.step;
+        if (step === "preview") state.send.step = "details";
+        else if (step === "details") state.send.step = "pick";
+        else state.send = api.blankSend();
         api.renderMain();
       },
       sendPhone: function (el) {
@@ -351,11 +407,12 @@
         });
         state.send.sentCard = { name: view.name, tenant: view.tenant };
         state.send.step = "done";
+        state.giftsTab = "sent";
         api.renderMain();
       },
       sendReset: function () {
         state.send = api.blankSend();
-        api.goTab("wallet");
+        api.goTab("gifts");
       },
 
       profileNotif: function (el) {
@@ -365,29 +422,15 @@
         el.classList.toggle("is-on", n.on);
         el.setAttribute("aria-checked", n.on ? "true" : "false");
       },
-      histTab: function (el) {
-        state.histTab = el.getAttribute("data-tab");
-        api.renderMain();
-      },
       editProfile: function () {
         UI.showToast("Profile editing opens here in the live app", "info");
-      },
-
-      declineGift: function () {
-        var gift = state.pending.filter(function (g) { return g.id === state.giftId; })[0];
-        if (!gift) return;
-        state.pending = state.pending.filter(function (g) { return g.id !== gift.id; });
-        state.overlay = null;
-        state.giftId = null;
-        api.render();
-        UI.showToast("Declined · card returned to " + gift.from, "danger");
       }
     };
   }
 
   window.CustomerScreens = {
     wallet: wallet,
-    send: send,
+    gifts: gifts,
     profile: profile,
     inbox: inbox,
     createActions: createActions

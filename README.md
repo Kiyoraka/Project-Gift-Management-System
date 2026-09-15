@@ -23,7 +23,7 @@ and Customer App artboards) and follow the design brief's palette, type scale, m
 | `login.html` | Everyone | Single sign in with demo account buttons (Admin, Client, Customer 1, Customer 2) or any email and password |
 | `admin.html` | Platform admin | Main dashboard, Analysis tabs and ranges, User table with filters, invite drawer, Setting with suspend-client confirmation |
 | `client.html` | Merchant | Main dashboard, Payment QR popup (Static or Amount QR with 5-minute timer), Analysis, Customer List, Setting (profile, card design studio, payment gateways with Add Gateway drawer, staff, notifications) |
-| `customer.html` | Customer | Wallet with tap-to-flip cards, gift inbox (accept or decline), Send a gift, Scan and Pay (fixed, open value with top-up, voucher), Buy a card, Profile and history |
+| `customer.html` | Customer | Five-tab app: Wallet (tap-to-flip cards), Shop (browse merchants and buy), Scan (pay with fixed, open value with top-up, or voucher), Gifts (inbox with badge, Send a gift, received and sent history), Profile (notifications and transactions) |
 
 Switch between apps with the dark demo switcher in the bottom-right corner. On the Client console its coloured dots
 switch between Senja Coffee, Lumi Spa and Page & Ink.
