@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign in - Giftwell</title>
+<meta name="description" content="Demo sign in for the Gift Management System prototype. Any email and password works.">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/gift-card.css">
+<link rel="stylesheet" href="assets/css/login.css">
+</head>
+<body class="login-body">
+<div class="login">
+
+  <section class="login-brand" aria-label="Giftwell">
+    <a class="login-logo" href="index.html">
+      <span class="brand-mark" style="--size:40px;--mark:#fff;color:var(--primary)">G</span>
+      <span>
+        <span class="login-logo-name">Giftwell</span>
+        <span class="login-logo-sub">Gift Management System</span>
+      </span>
+    </a>
+
+    <div class="card-fan" id="cardFan" aria-hidden="true"></div>
+
+    <div class="login-quote">
+      <p>&ldquo;Velvet plum for the platform, gold ribbon for the gift moment.&rdquo;</p>
+      <span>Senja Coffee &middot; Lumi Spa &middot; Page &amp; Ink</span>
+    </div>
+  </section>
+
+  <main class="login-main">
+    <div class="login-card">
+      <div>
+        <h1 class="page-title">Sign in</h1>
+        <p class="muted login-intro" id="loginIntro">Choose a workspace to open the prototype.</p>
+      </div>
+
+      <form class="stack" style="--gap:16px" id="loginForm" novalidate>
+        <div class="field">
+          <span>Sign in as</span>
+          <div class="segmented" role="tablist" aria-label="Role" id="roleTabs">
+            <button type="button" role="tab" data-action="setRole" data-role="admin">Admin</button>
+            <button type="button" role="tab" data-action="setRole" data-role="client">Client</button>
+            <button type="button" role="tab" data-action="setRole" data-role="customer">Customer</button>
+          </div>
+        </div>
+
+        <label class="field" id="tenantField" hidden>
+          Tenant
+          <select class="select" id="tenantSelect" data-change="setTenant">
+            <option value="senja">Senja Coffee</option>
+            <option value="lumi">Lumi Spa</option>
+            <option value="page">Page &amp; Ink</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Email
+          <input class="input" id="emailInput" type="email" autocomplete="username" inputmode="email" data-input="editEmail" placeholder="name@company.com">
+        </label>
+
+        <label class="field">
+          Password
+          <span class="input-group">
+            <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Any password">
+            <button type="button" class="login-eye" data-action="togglePassword" aria-label="Show password" aria-pressed="false"></button>
+          </span>
+        </label>
+
+        <div class="form-error" id="loginError" role="alert" hidden>Enter any email and password to continue.</div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submitBtn">Sign in</button>
+
+        <div class="login-demo" role="note">
+          <strong>Demo mode</strong>
+          <span>Any email and any password works. Fields are pre-filled so one tap signs you in.</span>
+        </div>
+      </form>
+
+      <a class="btn-link login-back" href="index.html">&larr; Back to foundation</a>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/login.js"></script>
+</body>
+</html>
