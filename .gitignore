@@ -3,3 +3,9 @@
 # List of ignore files
 *.exe
 *.txt
+
+# Claude Code settings
+.claude/
+
+# Project Resources (Alice working reference - never commit)
+Project Resources
