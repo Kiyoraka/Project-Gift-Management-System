@@ -1,0 +1,116 @@
+/* Demo switcher - prototype chrome for moving between Foundation, Admin, Client and Customer.
+   Desktop: dark pill bottom-right. Mobile: round toggle bottom-right that expands a menu. */
+
+.demo-switch {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.demo-switch-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: #1F1B2A;
+  color: #F2EEF7;
+  font-size: 18px;
+  box-shadow: 0 8px 24px rgba(31, 27, 42, 0.3);
+}
+
+.demo-switch-menu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: #1F1B2A;
+  color: #F2EEF7;
+  box-shadow: 0 8px 24px rgba(31, 27, 42, 0.25);
+}
+
+.demo-switch-link {
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  color: #A59DB5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.demo-switch-link:hover {
+  color: #fff;
+}
+
+.demo-switch-link.is-current {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.demo-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: #322D40;
+}
+
+.demo-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--dot);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.demo-dot.is-current {
+  outline-color: #fff;
+}
+
+@media (max-width: 767px) {
+  .demo-switch-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .demo-switch-menu {
+    display: none;
+    order: -1;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 16px;
+    min-width: 170px;
+  }
+
+  .demo-switch.is-open .demo-switch-menu {
+    display: flex;
+    animation: popIn 150ms ease-out;
+  }
+
+  .demo-switch-link {
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .demo-sep {
+    width: auto;
+    height: 1px;
+    margin: 4px 6px;
+  }
+
+  .demo-dots {
+    display: flex;
+    gap: 10px;
+    padding: 6px 8px;
+  }
+}
