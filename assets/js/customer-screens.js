@@ -111,18 +111,127 @@
     );
   }
 
-  /* ---------- Send and Profile (filled in by the Send + Profile task) ---------- */
+  /* ---------- Send a gift ---------- */
 
-  function placeholder(title) {
-    return '<div class="stack"><h1 class="app-title">' + title + '</h1><div class="note-box">This screen is being prepared.</div></div>';
+  var SEND_TITLES = { pick: "Send a gift", details: "Who is it for?", preview: "Preview", done: "Sent" };
+  var DEFAULT_MESSAGE = "A little something, just because.";
+
+  function firstName(ctx) {
+    return String(ctx.session.name || "Aisyah").split(" ")[0];
   }
 
-  function send() {
-    return placeholder("Send a gift");
+  function whenLabel(send) {
+    return send.when === "now" ? "delivered now" : "scheduled 20 Sep, 09:00";
   }
 
-  function profile() {
-    return placeholder("Profile");
+  function send(ctx) {
+    var s = ctx.state;
+    var sd = s.send;
+    var card = findCard(s, sd.cardId);
+    var step = (sd.step === "details" || sd.step === "preview") && !card ? "pick" : sd.step;
+    var body = "";
+
+    if (step === "pick") {
+      var giftable = s.cards.filter(function (c) { return c.status === "active" && c.balance > 0; });
+      body = '<div class="muted">Choose a card from your wallet. Only cards with value left can be gifted.</div>' +
+        (giftable.length
+          ? '<div class="stack" style="--gap:12px">' + giftable.map(function (c) {
+              return UI.renderGiftCard(CustomerData.cardView(c), { action: "sendPick", id: c.id, noBack: true, ariaLabel: "Gift " + c.name });
+            }).join("") + "</div>"
+          : '<div class="note-box">No cards with value left. Buy one first, then send it.</div>');
+    } else if (step === "details") {
+      var count = sd.message.length;
+      body =
+        '<div style="width:60%;align-self:center">' + UI.renderGiftCard(CustomerData.cardView(card), { noBack: true }) + "</div>" +
+        '<label class="field">Recipient phone<span class="row" style="--gap:8px">' +
+        '<input class="input input-plain mono" id="sendPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="01X-XXX XXXX" data-input="sendPhone" value="' + esc(sd.phone) + '" style="flex:1;font-size:15px;padding:12px 14px;border-radius:12px">' +
+        '<button type="button" class="btn btn-outline" style="border-radius:12px" data-action="sendContacts">Contacts</button></span></label>' +
+        '<label class="field"><span class="spread">Message<span id="msgCount" style="font-weight:500;color:' + (count >= 130 ? "var(--warning)" : "var(--ink-muted)") + '">' + count + "/140</span></span>" +
+        '<textarea class="textarea input-plain" rows="3" maxlength="140" placeholder="Something warm…" data-input="sendMessage" style="padding:12px 14px;border-radius:12px">' + esc(sd.message) + "</textarea></label>" +
+        '<div class="field">Deliver<div class="segmented" style="border-radius:12px">' +
+        '<button type="button" class="' + (sd.when === "now" ? "is-active" : "") + '" data-action="sendWhen" data-when="now">Now</button>' +
+        '<button type="button" class="' + (sd.when === "later" ? "is-active" : "") + '" data-action="sendWhen" data-when="later">Schedule</button></div>' +
+        (sd.when === "later" ? '<input class="input input-plain" type="datetime-local" value="2026-09-20T09:00" aria-label="Delivery time" style="padding:12px 14px;border-radius:12px">' : "") +
+        "</div>" +
+        '<div class="form-error" id="sendError" role="alert"' + (sd.error ? "" : " hidden") + ">Enter a Malaysian mobile number (01X-XXX XXXX).</div>" +
+        '<button type="button" class="btn btn-primary btn-app" data-action="sendPreview">Preview gift</button>';
+    } else if (step === "preview") {
+      body =
+        '<div style="padding:16px 0 8px">' + UI.renderGiftWrap(UI.renderGiftCard(CustomerData.cardView(card), { noBack: true })) +
+        '<div class="message-bubble"><div class="message-text">“' + esc(sd.message.trim() || DEFAULT_MESSAGE) + '”</div>' +
+        '<div class="caption" style="margin-top:8px">— ' + esc(firstName(ctx)) + " · to " + esc(sd.phone) + " · " + whenLabel(sd) + "</div></div></div>" +
+        '<div class="note-box">The card leaves your wallet now and waits for ' + esc(sd.phone) + ". If they don’t accept within 72 hours it comes back.</div>" +
+        '<button type="button" class="btn btn-primary btn-app" data-action="sendConfirm">Send gift</button>';
+    } else if (step === "done") {
+      var sent = sd.sentCard || {};
+      body =
+        '<div class="center-stack anim-pop" style="padding:32px 12px">' +
+        '<div class="success-icon is-gold">' + UI.icon("check", 30, 2.4) + "</div>" +
+        '<div class="section-title" style="font-size:24px">Gift on its way</div>' +
+        '<div class="muted">' + esc(sent.name) + " from " + esc(sent.tenant) + " is waiting for " + esc(sd.phone) + ". We’ll tell you when they open it.</div>" +
+        '<button type="button" class="btn btn-outline" style="margin-top:10px;border-radius:12px;padding:12px 20px" data-action="sendReset">Back to wallet</button></div>';
+    }
+
+    var canBack = step === "details" || step === "preview";
+
+    return (
+      '<div class="stack">' +
+      '<div class="title-row">' +
+      (canBack ? '<button type="button" class="back-btn" data-action="sendBack" aria-label="Back">' + UI.icon("arrowLeft", 18, 2) + "</button>" : "") +
+      '<h1 class="app-title">' + SEND_TITLES[step] + "</h1></div>" +
+      body +
+      "</div>"
+    );
+  }
+
+  /* ---------- Profile ---------- */
+
+  function historyColor(row) {
+    if (row.kind === "spend") return "var(--ink)";
+    if (row.kind === "purchase") return "var(--success)";
+    if (row.dir === "received") return "var(--pill-gold-fg)";
+    return "var(--primary)";
+  }
+
+  function profile(ctx) {
+    var s = ctx.state;
+    var rows = s.histTab === "tx" ? s.history : s.gifts;
+
+    var notifs = s.notifs.map(function (n, i) {
+      return (
+        '<div class="list-row" style="padding:12px 0"><div class="grow"><div class="row-title">' + esc(n.name) + '</div><div class="row-sub">' + esc(n.desc) + "</div></div>" +
+        '<button type="button" class="switch' + (n.on ? " is-on" : "") + '" role="switch" aria-checked="' + n.on + '" aria-label="' + esc(n.name) +
+        '" data-action="profileNotif" data-index="' + i + '"></button></div>'
+      );
+    }).join("");
+
+    var history = rows.length
+      ? rows.map(function (h) {
+          var t = CustomerData.TENANTS[h.client];
+          return (
+            '<div class="list-row" style="padding:12px 0"><span class="brand-mark" style="--size:34px;--mark:' + t.brand + '">' + esc(t.name.charAt(0)) + "</span>" +
+            '<div class="grow"><div class="row-title">' + esc(h.title) + '</div><div class="row-sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(h.sub) + "</div></div>" +
+            '<div style="text-align:right"><div class="row-title" style="white-space:nowrap;color:' + historyColor(h) + '">' + esc(h.amount) + '</div><div class="caption" style="font-size:11px">' + esc(h.date) + "</div></div></div>"
+          );
+        }).join("")
+      : '<div class="muted" style="padding:16px 0;text-align:center">Nothing here yet.</div>';
+
+    return (
+      '<div class="stack" style="--gap:18px">' +
+      '<h1 class="app-title">Profile</h1>' +
+      '<div class="soft-panel row" style="padding:16px;--gap:14px">' +
+      '<span class="avatar" style="--size:52px;font-size:16px">' + esc(UI.initials(ctx.session.name)) + "</span>" +
+      '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(ctx.session.name) + "</div>" +
+      '<div class="mono caption" style="font-size:13px;margin-top:2px">012-338 9021</div></div>' +
+      '<button type="button" class="btn btn-outline btn-sm" data-action="editProfile">Edit</button></div>' +
+      '<div class="soft-panel soft-panel-pad">' + notifs + "</div>" +
+      '<div class="segmented" style="border-radius:12px" role="tablist" aria-label="History">' +
+      '<button type="button" role="tab" class="' + (s.histTab === "tx" ? "is-active" : "") + '" aria-selected="' + (s.histTab === "tx") + '" data-action="histTab" data-tab="tx">Transactions</button>' +
+      '<button type="button" role="tab" class="' + (s.histTab === "gifts" ? "is-active" : "") + '" aria-selected="' + (s.histTab === "gifts") + '" data-action="histTab" data-tab="gifts">Gifts</button></div>' +
+      '<div class="soft-panel soft-panel-pad">' + history + "</div>" +
+      '<button type="button" class="btn btn-danger-outline btn-app" data-action="signOut">' + UI.icon("logout", 18) + "<span>Sign out</span></button>" +
+      "</div>"
+    );
   }
 
   /* ---------- Actions ---------- */
@@ -178,6 +287,92 @@
         api.goTab("wallet");
         UI.showToast(gift.card.name + " added to your wallet");
       },
+      sendPick: function (el) {
+        var card = findCard(state, el.getAttribute("data-id"));
+        if (!card) return;
+        state.send.cardId = card.id;
+        state.send.step = "details";
+        state.send.error = false;
+        api.renderMain();
+      },
+      sendBack: function () {
+        state.send.step = state.send.step === "preview" ? "details" : "pick";
+        api.renderMain();
+      },
+      sendPhone: function (el) {
+        state.send.phone = el.value;
+        if (state.send.error) {
+          state.send.error = false;
+          var err = document.getElementById("sendError");
+          if (err) err.hidden = true;
+        }
+      },
+      sendContacts: function () {
+        state.send.phone = CustomerData.CONTACT_PHONE;
+        state.send.error = false;
+        var input = document.getElementById("sendPhone");
+        if (input) input.value = state.send.phone;
+        var err = document.getElementById("sendError");
+        if (err) err.hidden = true;
+      },
+      sendMessage: function (el) {
+        state.send.message = el.value.slice(0, 140);
+        var counter = document.getElementById("msgCount");
+        if (counter) {
+          counter.textContent = state.send.message.length + "/140";
+          counter.style.color = state.send.message.length >= 130 ? "var(--warning)" : "var(--ink-muted)";
+        }
+      },
+      sendWhen: function (el) {
+        state.send.when = el.getAttribute("data-when");
+        api.renderMain();
+      },
+      sendPreview: function () {
+        if (!CustomerData.PHONE_PATTERN.test(state.send.phone.trim())) {
+          state.send.error = true;
+          var err = document.getElementById("sendError");
+          if (err) err.hidden = false;
+          var input = document.getElementById("sendPhone");
+          if (input) input.focus();
+          return;
+        }
+        state.send.phone = state.send.phone.trim();
+        state.send.step = "preview";
+        api.renderMain();
+      },
+      sendConfirm: function () {
+        var card = findCard(state, state.send.cardId);
+        if (!card) return;
+        var view = CustomerData.cardView(card);
+        state.cards = state.cards.filter(function (c) { return c.id !== card.id; });
+        state.gifts.unshift({
+          dir: "sent", client: card.client, title: card.name + " to " + state.send.phone,
+          sub: state.send.when === "now" ? "Waiting to be accepted" : "Scheduled 20 Sep", amount: "Sent", date: "15 Sep"
+        });
+        state.send.sentCard = { name: view.name, tenant: view.tenant };
+        state.send.step = "done";
+        api.renderMain();
+      },
+      sendReset: function () {
+        state.send = api.blankSend();
+        api.goTab("wallet");
+      },
+
+      profileNotif: function (el) {
+        var n = state.notifs[Number(el.getAttribute("data-index"))];
+        if (!n) return;
+        n.on = !n.on;
+        el.classList.toggle("is-on", n.on);
+        el.setAttribute("aria-checked", n.on ? "true" : "false");
+      },
+      histTab: function (el) {
+        state.histTab = el.getAttribute("data-tab");
+        api.renderMain();
+      },
+      editProfile: function () {
+        UI.showToast("Profile editing opens here in the live app", "info");
+      },
+
       declineGift: function () {
         var gift = state.pending.filter(function (g) { return g.id === state.giftId; })[0];
         if (!gift) return;
