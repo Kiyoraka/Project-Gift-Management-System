@@ -229,10 +229,169 @@
     );
   }
 
-  /* ---------- Setting (tabs filled in by the settings task) ---------- */
+  /* ---------- Setting ---------- */
 
-  function setting() {
-    return '<div class="screen">' + pageHead("Setting", "") + '<div class="panel empty-state">Business settings are being prepared.</div></div>';
+  var SETTING_TABS = ["Business Profile", "Card Designs", "Payment Gateways", "Staff", "Notifications"];
+
+  function field(label, inputHtml, extraStyle) {
+    return '<label class="field"' + (extraStyle ? ' style="' + extraStyle + '"' : "") + ">" + esc(label) + inputHtml + "</label>";
+  }
+
+  function previewCard(ctx) {
+    var t = ctx.tenant;
+    var d = ctx.state.design;
+    var label = d.type === "fixed" ? "RM " + d.denom : d.type === "open" ? "RM 10 – 1,000" : (d.item || t.voucherHint.replace("e.g. ", ""));
+    return {
+      tenant: t.name, name: d.name || "Card name", type: d.type,
+      motif: d.art ? t.motif : "none", art: d.art ? t.art : "#E4DEEC", ink: d.art ? t.ink : "#6B647A", brand: t.brand,
+      expiry: "Sep 2027", number: "•••• •••• •••• 0000", balanceLabel: label
+    };
+  }
+
+  function profileTab(ctx) {
+    var t = ctx.tenant;
+    return (
+      '<div class="panel" style="padding:24px;max-width:820px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">' +
+      '<div class="row" style="grid-column:1/-1;--gap:16px"><span class="brand-mark" style="--size:64px;--mark:' + t.brand + ';border-radius:16px">' + esc(t.name.charAt(0)) + "</span>" +
+      '<div><button type="button" class="btn btn-outline btn-sm" data-action="replaceLogo">Replace logo</button>' +
+      '<div class="caption" style="margin-top:6px">PNG or SVG · shown in sidebar, QR centre and card face</div></div></div>' +
+      field("Business name", '<input class="input" value="' + esc(t.name) + '">') +
+      field("Business type", '<input class="input" value="' + esc(t.business) + '">') +
+      field("Brand accent", '<span class="input-group" style="padding:8px 12px;gap:10px"><span style="width:22px;height:22px;border-radius:6px;background:' + t.brand +
+        '"></span><span class="mono" style="font-size:13px;color:var(--ink)">' + esc(t.brand) + "</span></span>") +
+      field("Contact phone", '<input class="input" type="tel" value="' + esc(t.phone) + '">') +
+      field("Address", '<input class="input" value="' + esc(t.address) + '">', "grid-column:1/-1") +
+      '<div style="grid-column:1/-1;display:flex;justify-content:flex-end"><button type="button" class="btn btn-primary" data-action="saveProfile">Save profile</button></div>' +
+      "</div>"
+    );
+  }
+
+  function designsTab(ctx) {
+    var t = ctx.tenant;
+    var d = ctx.state.design;
+    var liveCount = ctx.designs.filter(function (x) { return x.status === "Active"; }).length;
+
+    var list = ctx.designs.map(function (x) {
+      return (
+        '<div class="list-row" style="padding:12px 20px"><span style="width:44px;height:28px;border-radius:6px;flex-shrink:0;background:' + t.art +
+        ';border:1px solid var(--line)"></span><div class="grow"><div class="row-title">' + esc(x.name) + '</div><div class="row-sub">' + esc(x.meta) + "</div></div>" +
+        UI.pill(x.status, "pill-sm") + "</div>"
+      );
+    }).join("");
+
+    var types = [["fixed", "Fixed Value"], ["open", "Open Value"], ["voucher", "Voucher"]].map(function (tp) {
+      return '<button type="button" class="' + (d.type === tp[0] ? "is-active" : "") + '" data-action="designType" data-type="' + tp[0] + '">' + tp[1] + "</button>";
+    }).join("");
+
+    var typeFields = "";
+    if (d.type === "fixed") {
+      typeFields = '<div class="field">Denomination<div class="row-wrap" style="--gap:8px">' +
+        [50, 100, 200].map(function (v) {
+          return '<button type="button" class="chip' + (d.denom === v ? " is-active" : "") + '" data-action="designDenom" data-value="' + v + '">RM ' + v + "</button>";
+        }).join("") + "</div></div>";
+    } else if (d.type === "open") {
+      typeFields = '<div class="two-col">' + field("Min amount", '<input class="input" type="number" value="10" min="1">') +
+        field("Max amount", '<input class="input" type="number" value="1000" min="1">') + "</div>";
+    } else {
+      typeFields = field("Voucher item", '<input class="input" data-input="designItem" placeholder="' + esc(t.voucherHint) + '" value="' + esc(d.item) + '">');
+    }
+
+    var dropTitle = d.art ? t.name.toLowerCase().replace(/[^a-z]/g, "") + "-front.png · 1920 × 1211" : "Drop artwork or click to upload";
+
+    return (
+      '<div class="panel-row" style="align-items:flex-start">' +
+      '<div class="panel panel-flush" style="flex:1 1 260px"><div class="spread panel-head-bar"><span class="panel-title">Your designs</span><span class="caption">' +
+      ctx.designs.length + " designs · " + liveCount + " live</span></div>" + list + "</div>" +
+      '<div class="panel" style="flex:2 1 420px;padding:24px;display:flex;flex-direction:column;gap:18px">' +
+      '<div class="section-title">New card design</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;align-items:start">' +
+      '<div class="stack" style="--gap:14px">' +
+      '<button type="button" data-action="uploadArt" style="border:2px dashed ' + (d.art ? "var(--success)" : "var(--line)") +
+      ';border-radius:16px;padding:22px 16px;text-align:center;background:var(--bg);color:var(--primary)">' + UI.icon("upload", 28) +
+      '<div style="font-weight:600;margin-top:8px;font-size:13px;color:var(--ink)">' + esc(dropTitle) + "</div>" +
+      '<div class="caption" style="margin-top:4px">PNG, JPG or SVG · 1.586 : 1 · keep the bottom 34% quiet</div></button>' +
+      field("Card name", '<input class="input" id="designName" data-input="designName" placeholder="e.g. Sunrise" value="' + esc(d.name) + '">') +
+      '<div class="field">Type<div class="segmented">' + types + "</div></div>" +
+      typeFields +
+      field("Validity", '<span class="input-group"><input type="number" min="1" data-input="designValidity" value="' + esc(d.validity) + '" aria-label="Validity in months"><span class="affix">months</span></span>') +
+      "</div>" +
+      '<div class="stack" style="--gap:12px"><div class="stat-label">Live preview</div>' +
+      '<div id="designPreview">' + UI.renderGiftCard(previewCard(ctx)) + "</div>" +
+      '<div class="caption">Balance, number and type badge are overlaid by the platform inside the safe zone. Your artwork is always the card.</div>' +
+      '<div class="form-error" id="designError"' + (ctx.state.designError ? "" : " hidden") + ">Upload artwork and name the card before publishing.</div>" +
+      '<div class="row-wrap" style="--gap:10px;justify-content:flex-end"><button type="button" class="btn btn-outline" data-action="saveDraft">Save draft</button>' +
+      '<button type="button" class="btn btn-primary" data-action="publishDesign">Publish</button></div>' +
+      "</div></div></div></div>"
+    );
+  }
+
+  function gatewaysTab(ctx) {
+    var cards = ctx.gateways.map(function (g, i) {
+      var info = ClientData.PROVIDERS[g.provider] || ClientData.PROVIDERS["Manual bank transfer"];
+      var disabled = g.status === "Disabled";
+      var canDefault = !g.isDefault && g.status === "Active";
+      return (
+        '<div class="panel" style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">' +
+        '<div class="row" style="--gap:12px;align-items:flex-start"><span class="brand-mark" style="--size:40px;--mark:' + info.bg + ';font-family:var(--font-body);font-size:13px">' +
+        esc(info.logo) + '</span><div class="grow" style="flex:1;min-width:0"><div style="font-weight:600">' + esc(g.provider) + '</div><div class="caption" style="margin-top:2px">' +
+        esc(g.detail) + "</div></div>" + (g.isDefault ? UI.pill("Default", "pill-sm") : "") + "</div>" +
+        '<div class="spread">' + UI.pill(g.status) + '<div class="row" style="--gap:6px">' +
+        (canDefault ? '<button type="button" class="btn btn-outline btn-sm" data-action="makeDefault" data-index="' + i + '">Set default</button>' : "") +
+        '<button type="button" class="btn btn-outline btn-sm" data-action="toggleGateway" data-index="' + i + '" style="color:' + (disabled ? "var(--success)" : "var(--danger)") + '">' +
+        (disabled ? "Enable" : "Disable") + "</button></div></div></div>"
+      );
+    }).join("");
+
+    return (
+      '<div class="stack">' +
+      '<div class="spread" style="flex-wrap:wrap"><div class="muted" style="font-size:13px;max-width:620px">The default gateway settles card purchases and Open Value top-ups. QR payments spend balance and need no gateway.</div>' +
+      '<button type="button" class="btn btn-primary" data-action="openGateway">Add Gateway</button></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">' + cards + "</div></div>"
+    );
+  }
+
+  function staffTab(ctx) {
+    var t = ctx.tenant;
+    var people = [{ name: ctx.session.name || t.staff, role: ctx.session.title || "Owner", perm: "Full access" }].concat(t.staffList);
+    return (
+      '<div class="panel panel-flush" style="max-width:720px"><div class="spread panel-head-bar"><span class="panel-title">Staff</span>' +
+      '<button type="button" class="btn btn-outline btn-sm" data-action="inviteStaff">Invite staff</button></div>' +
+      people.map(function (p) {
+        return '<div class="list-row" style="padding:12px 20px"><span class="avatar">' + esc(UI.initials(p.name)) + '</span><div class="grow"><div class="row-title">' + esc(p.name) +
+          '</div><div class="row-sub">' + esc(p.role) + '</div></div><span class="caption">' + esc(p.perm) + "</span></div>";
+      }).join("") +
+      "</div>"
+    );
+  }
+
+  function notificationsTab(ctx) {
+    return (
+      '<div class="panel" style="max-width:720px;padding:8px 24px">' +
+      ctx.notifs.map(function (n, i) {
+        return (
+          '<div class="list-row" style="gap:16px;padding:14px 0"><div class="grow"><div class="row-title">' + esc(n.name) + '</div><div class="row-sub" style="margin-top:2px">' +
+          esc(n.desc) + "</div></div>" +
+          '<button type="button" class="switch' + (n.on ? " is-on" : "") + '" role="switch" aria-checked="' + n.on + '" aria-label="' + esc(n.name) +
+          '" data-action="toggleNotif" data-index="' + i + '"></button></div>'
+        );
+      }).join("") +
+      "</div>"
+    );
+  }
+
+  function setting(ctx) {
+    var current = ctx.state.settingTab;
+    var tabs = SETTING_TABS.map(function (name) {
+      return '<button type="button" class="tab' + (current === name ? " is-active" : "") + '" data-action="setSettingTab" data-tab="' + name + '">' + name + "</button>";
+    }).join("");
+    var body = {
+      "Business Profile": profileTab,
+      "Card Designs": designsTab,
+      "Payment Gateways": gatewaysTab,
+      "Staff": staffTab,
+      "Notifications": notificationsTab
+    }[current](ctx);
+    return '<div class="screen screen-tight"><h1 class="page-title">Setting</h1><div class="tabs" role="tablist">' + tabs + "</div>" + body + "</div>";
   }
 
   window.ClientScreens = {
@@ -241,6 +400,7 @@
     analysis: analysis,
     customers: customers,
     customerRows: customerRows,
-    setting: setting
+    setting: setting,
+    previewCard: previewCard
   };
 })();

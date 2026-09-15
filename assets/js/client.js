@@ -22,8 +22,14 @@
     designs: ClientData.initialDesigns(),
     gateways: ClientData.initialGateways(),
     notifs: ClientData.initialNotifications(),
+    design: blankDesign(),
+    designError: false,
     overlay: null
   };
+
+  function blankDesign() {
+    return { name: "", type: "fixed", denom: 100, item: "", validity: 12, art: false };
+  }
 
   var els = {
     shell: document.getElementById("shell"),
@@ -127,6 +133,22 @@
     els.shell.classList.toggle("nav-open", open);
   }
 
+  function renderDesignPreview() {
+    var host = document.getElementById("designPreview");
+    if (host) host.innerHTML = UI.renderGiftCard(ClientScreens.previewCard(ctx()));
+  }
+
+  function showDesignError() {
+    var el = document.getElementById("designError");
+    if (el) el.hidden = false;
+  }
+
+  function designMeta(d) {
+    if (d.type === "fixed") return "Fixed · RM " + d.denom + " · " + (d.validity || 12) + " mo";
+    if (d.type === "open") return "Open · RM 10–1,000";
+    return "Voucher · " + (d.item.trim() || tenant().voucherHint.replace("e.g. ", ""));
+  }
+
   function closeOverlay() {
     state.overlay = null;
     ClientOverlays.onClose(ctx());
@@ -174,6 +196,99 @@
       render();
       UI.showToast("Switched to " + tenant().name, "info");
     },
+    setSettingTab: function (el) {
+      state.settingTab = el.getAttribute("data-tab");
+      state.designError = false;
+      renderMain();
+    },
+    saveProfile: function () { UI.showToast("Business profile saved"); },
+    replaceLogo: function () { UI.showToast("Logo upload opens here in the live system", "info"); },
+
+    uploadArt: function () {
+      state.design.art = true;
+      state.designError = false;
+      renderMain();
+      UI.showToast("Artwork uploaded · preview updated", "info");
+    },
+    designName: function (el) {
+      state.design.name = el.value;
+      renderDesignPreview();
+    },
+    designItem: function (el) {
+      state.design.item = el.value;
+      renderDesignPreview();
+    },
+    designValidity: function (el) { state.design.validity = el.value; },
+    designType: function (el) {
+      state.design.type = el.getAttribute("data-type");
+      renderMain();
+    },
+    designDenom: function (el) {
+      state.design.denom = Number(el.getAttribute("data-value"));
+      renderMain();
+    },
+    saveDraft: function () {
+      var d = state.design;
+      if (!d.name.trim()) {
+        state.designError = true;
+        showDesignError();
+        return;
+      }
+      state.designs[state.tenantKey].push({ name: d.name.trim(), type: d.type, meta: designMeta(d), status: "Draft", sold: 0 });
+      UI.showToast("“" + d.name.trim() + "” saved as draft", "info");
+      state.design = blankDesign();
+      state.designError = false;
+      renderMain();
+    },
+    publishDesign: function () {
+      var d = state.design;
+      if (!d.name.trim() || !d.art) {
+        state.designError = true;
+        showDesignError();
+        return;
+      }
+      state.designs[state.tenantKey].unshift({ name: d.name.trim(), type: d.type, meta: designMeta(d), status: "Active", sold: 0 });
+      UI.showToast("“" + d.name.trim() + "” is live in your catalogue");
+      state.design = blankDesign();
+      state.designError = false;
+      renderMain();
+    },
+
+    makeDefault: function (el) {
+      var list = state.gateways[state.tenantKey];
+      var target = list[Number(el.getAttribute("data-index"))];
+      if (!target) return;
+      list.forEach(function (g) { g.isDefault = g === target; });
+      renderMain();
+      UI.showToast(target.provider + " is now the default gateway");
+    },
+    toggleGateway: function (el) {
+      var g = state.gateways[state.tenantKey][Number(el.getAttribute("data-index"))];
+      if (!g) return;
+      var disabled = g.status === "Disabled";
+      if (g.isDefault && !disabled) {
+        UI.showToast("Set another gateway as default first", "warning");
+        return;
+      }
+      g.status = disabled ? "Active" : "Disabled";
+      renderMain();
+      UI.showToast(disabled ? g.provider + " enabled" : g.provider + " disabled", disabled ? "success" : "danger");
+    },
+    openGateway: function () {
+      state.overlay = "gateway";
+      ClientOverlays.onOpen(ctx(), "gateway");
+      renderOverlay();
+    },
+
+    inviteStaff: function () { UI.showToast("Staff invite link copied", "info"); },
+    toggleNotif: function (el) {
+      var n = state.notifs[Number(el.getAttribute("data-index"))];
+      if (!n) return;
+      n.on = !n.on;
+      el.classList.toggle("is-on", n.on);
+      el.setAttribute("aria-checked", n.on ? "true" : "false");
+    },
+
     openQr: function () {
       state.overlay = "qr";
       setNavOpen(false);
