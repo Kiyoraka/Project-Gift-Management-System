@@ -222,7 +222,7 @@
       '<div class="soft-panel row" style="padding:16px;--gap:14px">' +
       '<span class="avatar" style="--size:52px;font-size:16px">' + esc(UI.initials(ctx.session.name)) + "</span>" +
       '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(ctx.session.name) + "</div>" +
-      '<div class="mono caption" style="font-size:13px;margin-top:2px">012-338 9021</div></div>' +
+      '<div class="mono caption" style="font-size:13px;margin-top:2px">' + esc(s.account.phone) + "</div></div>" +
       '<button type="button" class="btn btn-outline btn-sm" data-action="editProfile">Edit</button></div>' +
       '<div class="soft-panel soft-panel-pad">' + notifs + "</div>" +
       '<div class="segmented" style="border-radius:12px" role="tablist" aria-label="History">' +
@@ -308,7 +308,7 @@
         }
       },
       sendContacts: function () {
-        state.send.phone = CustomerData.CONTACT_PHONE;
+        state.send.phone = state.account.contactPhone;
         state.send.error = false;
         var input = document.getElementById("sendPhone");
         if (input) input.value = state.send.phone;

@@ -10,15 +10,19 @@
 
   var TABS = [["wallet", "Wallet"], ["send", "Send"], ["scan", "Scan"], ["profile", "Profile"]];
 
+  /* Customer 1 (Aisyah) and Customer 2 (Wei Ling) each open their own demo wallet. */
+  var wallet = CustomerData.account(CustomerData.accountKeyFor(session));
+
   var state = {
     tab: "wallet",
     filter: "All",
     flipped: null,
     newId: null,
-    cards: CustomerData.initialCards(),
-    pending: CustomerData.initialPending(),
-    history: CustomerData.initialHistory(),
-    gifts: CustomerData.initialGifts(),
+    account: { key: wallet.key, name: wallet.name, phone: wallet.phone, contactPhone: wallet.contactPhone },
+    cards: wallet.cards,
+    pending: wallet.pending,
+    history: wallet.history,
+    gifts: wallet.gifts,
     notifs: CustomerData.initialNotifications(),
     histTab: "tx",
     send: blankSend(),
